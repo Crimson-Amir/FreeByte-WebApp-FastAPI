@@ -1,0 +1,35 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <value>
+          <list size="13">
+            <item index="0" class="java.lang.String" itemvalue="beautifulsoup4" />
+            <item index="1" class="java.lang.String" itemvalue="bs4" />
+            <item index="2" class="java.lang.String" itemvalue="six" />
+            <item index="3" class="java.lang.String" itemvalue="transliterate" />
+            <item index="4" class="java.lang.String" itemvalue="requests" />
+            <item index="5" class="java.lang.String" itemvalue="python-bidi" />
+            <item index="6" class="java.lang.String" itemvalue="engineering-notation" />
+            <item index="7" class="java.lang.String" itemvalue="certifi" />
+            <item index="8" class="java.lang.String" itemvalue="tk" />
+            <item index="9" class="java.lang.String" itemvalue="charset-normalizer" />
+            <item index="10" class="java.lang.String" itemvalue="soupsieve" />
+            <item index="11" class="java.lang.String" itemvalue="urllib3" />
+            <item index="12" class="java.lang.String" itemvalue="idna" />
+          </list>
+        </value>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyPep8Inspection" enabled="false" level="INFORMATION" enabled_by_default="false" editorAttributes="INFORMATION_ATTRIBUTES" />
+    <inspection_tool class="PyUnusedLocalInspection" enabled="true" level="WEAK WARNING" enabled_by_default="true" editorAttributes="INFO_ATTRIBUTES">
+      <scope name="Scratches and Consoles" level="WEAK WARNING" enabled="true" />
+    </inspection_tool>
+    <inspection_tool class="SpellCheckingInspection" enabled="false" level="TYPO" enabled_by_default="false">
+      <option name="processCode" value="true" />
+      <option name="processLiterals" value="true" />
+      <option name="processComments" value="true" />
+    </inspection_tool>
+  </profile>
+</component>

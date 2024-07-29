@@ -1,0 +1,78 @@
+@font-face {
+    font-family: 'vazir_medium';
+    src: url('/statics/index/vazirmatn/fonts/webfonts/Vazirmatn-Medium.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'vazir_regular';
+    src: url('/statics/index/vazirmatn/fonts/webfonts/Vazirmatn-Regular.woff2') format('woff2');
+}
+
+.right_and_with_50 {
+    width: 50%;
+    text-align: right;
+}
+
+.vazir_medium {
+    font-family: 'vazir_medium', sans-serif;
+}
+
+.vazir_regular {
+    font-family: 'vazir_regular', sans-serif;
+}
+
+.htt-55 {
+    line-height: 55px;
+}
+
+.my_container {
+    padding: 20px;
+    margin: auto;
+    text-align: center;
+}
+
+.slider-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.slider-label {
+    margin-bottom: 10px;
+}
+
+.slider {
+    width: 100%;
+    max-width: 500px;
+    direction: ltr;
+}
+
+.price {
+    font-size: 24px;
+    margin-top: 20px;
+}
+
+input[type="number"] {
+    width: 80px;
+    text-align: center;
+    margin-left: 10px;
+}
+
+.flex-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.lable_continers {
+    display: flex;
+}
+
+.grey-back {
+    background-color: #fbfbfb;
+}
+
+.width-80 {
+    width: 80%;
+}
