@@ -22,9 +22,9 @@ class Product(ProductBase):
 
 
 class UserBase(BaseModel):
-    email : str
-    phone_number: int
-    is_active : bool = None
+    email : str = None
+    phone_number: int = None
+    active : bool = False
 
 class UserCreate(UserBase):
     password: str

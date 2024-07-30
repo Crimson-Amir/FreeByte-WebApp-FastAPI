@@ -34,9 +34,9 @@ def get_product(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Product).offset(skip).limit(limit).all()
 
 
-# def create_product(db: Session, item: schemas.ProductCreate):
-#     db_item = models.Product(**item.dict())
-#     db.add(db_item)
-#     db.commit()
-#     db.refresh(db_item)
-#     return db_item
+def create_product(db: Session, item: schemas.ProductCreate):
+    db_item = models.Product(**item.dict())
+    db.add(db_item)
+    db.commit()
+    db.refresh(db_item)
+    return db_item
