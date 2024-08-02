@@ -1,11 +1,10 @@
 from fastapi import FastAPI, Request, Depends, HTTPException, Cookie, Response
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from . import models, schemas, crud
 from .database import SessionLocal, engine
-# import string, random
-# from .email_utils import send_email
 import jwt
 from.auth import SECRET_KEY, REFRESH_SECRET_KEY, create_access_token, create_refresh_token
 
@@ -21,43 +20,21 @@ app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 app.mount('/statics', StaticFiles(directory='statics'), name='static')
 
-@app.get('/')
-async def home(request: Request):
-    return templates.TemplateResponse(request=request, name='index/sign_in.html')
-
-@app.get('/sign-up/')
-async def sign_up(request: Request):
-    return templates.TemplateResponse(request=request, name='authentication/sign_in.html', context={'test': ''})
-
-
-# @app.post('/register/')
-# async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-#     db_user = crud.get_user_by_email(db, user.email)
-#     if db_user and db_user.active: raise HTTPException(400, 'email already registred.')
-#     if not user.phone_number and not user.email: raise HTTPException(400, 'email or phone number is required.')
-#
-#     code = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
-#     verification_codes[user.email] = code
-#
-#     email_body = f"Your verification code is: {code}"
-#     await send_email(subject="Verify your email", recipient=user.email, body=email_body)
-#
-#     if not db_user.active: crud.create_user(db, user)
-#
-#     return {"message": "Verification code sent to your email"}
 
 @app.post("/refresh-token")
-def refresh_token(refresh_token_attr: str = Cookie(None)):
+def refresh_token(request: Request, response: Response, refresh_token_attr: str = Cookie(None)):
     if not refresh_token_attr:
         raise HTTPException(status_code=401, detail="Refresh token is missing")
 
     try:
         payload = jwt.decode(refresh_token_attr, REFRESH_SECRET_KEY, algorithms=["HS256"])
-        username = payload.get("sub")
-        if username is None:
+        email= payload.get("email"),
+        if email is None:
             raise HTTPException(status_code=401, detail="Invalid refresh token")
 
-        new_access_token = create_access_token(data={"sub": username})
+        new_access_token = create_access_token(data={"email": email, "name": payload.get("name")})
+        request.state.user = payload
+        response.set_cookie(key="access_token", value=new_access_token, httponly=True, secure=True, max_age=3600)
         return {"access_token": new_access_token}
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Refresh token has expired")
@@ -66,51 +43,116 @@ def refresh_token(refresh_token_attr: str = Cookie(None)):
 
 @app.middleware("http")
 async def authenticate_request(request: Request, call_next):
+    exception_paths = ["/sign-up/"]
+
+    if request.url.path in exception_paths:
+        response = await call_next(request)
+        return response
+
     token = request.cookies.get("access_token")
     request.state.user = {"role": "guest"}
+
+    async def generate_new_token():
+        get_refresh_token = request.cookies.get("refresh_token")
+        if get_refresh_token:
+            try:
+                refresh_payload = jwt.decode(get_refresh_token, REFRESH_SECRET_KEY, algorithms=["HS256"])
+                new_access_token = create_access_token(data={"email": refresh_payload.get("email"), "name": refresh_payload.get("name")})
+                request.state.user = refresh_payload
+                new_response = await call_next(request)
+                new_response.set_cookie(key="access_token", value=new_access_token, httponly=True, secure=True, max_age=3600)
+                return new_response
+            except jwt.ExpiredSignatureError:
+                return RedirectResponse('/sign-up/')
+            except jwt.InvalidTokenError:
+                return RedirectResponse('/sign-up/')
 
     if token:
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
             request.state.user = payload
         except jwt.ExpiredSignatureError:
-            get_refresh_token = request.cookies.get("refresh_token")
-            if get_refresh_token:
-                try:
-                    payload = jwt.decode(get_refresh_token, REFRESH_SECRET_KEY, algorithms=["HS256"])
-                    new_access_token = create_access_token(data={"sub": payload["sub"]})
-                    response = await call_next(request)
-                    response.set_cookie(key="access_token", value=new_access_token, httponly=True, secure=True, max_age=3600)
-                    request.state.user = payload
-                    return response
-                except jwt.ExpiredSignatureError:
-                    pass
-                except jwt.InvalidTokenError:
-                    pass
+            response = await generate_new_token()
+            if response: return response
         except jwt.InvalidTokenError:
-            pass
+            return RedirectResponse('/sign-up/')
+
+    else:
+        response = await generate_new_token()
+        if response: return response
 
     response = await call_next(request)
     return response
 
-@app.post('/sign-up/')
+@app.api_route('/home', methods=['POST', 'GET'])
+async def home(request: Request):
+    return templates.TemplateResponse(request=request, name='index/index.html')
+
+@app.get('/sign-up/')
+async def sign_up(request: Request):
+    return templates.TemplateResponse(request=request, name='authentication/sign_in.html')
+
+@app.post('/sign-up/', response_model=schemas.User)
 async def create_user(user: schemas.UserCreate, response: Response, db: Session = Depends(get_db)):
     db_user = crud.get_user_by_email(db, user.email)
     if db_user: raise HTTPException(400, 'email already registred.')
-    if not user.phone_number and not user.email: raise HTTPException(400, 'email or phone number is required.')
     create_user_db = crud.create_user(db, user)
 
-    user_data = {"sub": create_user_db.email}
+    user_data = {"email": create_user_db.email, "name": create_user_db.name}
 
     access_token = create_access_token(data=user_data)
     cr_refresh_token = create_refresh_token(data=user_data)
 
     response.set_cookie(key="access_token", value=access_token, httponly=True, secure=True, max_age=3600)
-    response.set_cookie(key="refresh_token", value=cr_refresh_token, httponly=True, secure=True, max_age=604800)
+    response.set_cookie(key="refresh_token", value=cr_refresh_token, httponly=True, secure=True, max_age=2_592_000)
 
     return create_user_db
 
-@app.post('/create_product/', response_model=schemas.Product)
-async def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db)):
-    create_product_db = crud.create_product(db, product)
-    return create_product_db
+
+@app.api_route('/loggin', methods=['GET', 'POST'], response_model=schemas.User)
+async def loggin(request: Request, response: Response, user: schemas.UserCreate = None, db: Session = Depends(get_db)):
+    if request.method == 'GET':
+        return templates.TemplateResponse(request=request, name='authentication/loggin.html')
+
+    db_user = crud.get_user_by_email(db, user.email)
+    if not db_user: raise HTTPException(400, 'email does not exist.')
+
+    request_hashed_password = crud.hash_password_md5(user.password)
+    if request_hashed_password != db_user.hashed_password: raise HTTPException(400, 'password is not correct.')
+
+    user_data = {"email": db_user.email, "name": db_user.name}
+
+    access_token = create_access_token(data=user_data)
+    cr_refresh_token = create_refresh_token(data=user_data)
+    response.set_cookie(key="access_token", value=access_token, httponly=True, secure=True, max_age=3600)
+    response.set_cookie(key="refresh_token", value=cr_refresh_token, httponly=True, secure=True, max_age=2_592_000)
+
+    return db_user
+
+class TokenBlackList:
+    def __init__(self):
+        self.black_list = set()
+
+    def add(self, token):
+        self.black_list.add(token)
+
+    def is_blacklisted(self, token):
+        return token in self.black_list
+
+token_black_list = TokenBlackList()
+
+@app.post('/logout')
+async def loggin(request: Request):
+
+    token = request.cookies.get('access_token')
+    redirect = RedirectResponse('/home/')
+    if token:
+        token_black_list.add(token)
+        redirect.delete_cookie(key='access_token', httponly=True)
+        redirect.delete_cookie(key="refresh_token", httponly=True)
+    return redirect
+
+@app.post('/create_config/')
+async def create_config(config: schemas.ClientConfigCreate, request: Request, db: Session = Depends(get_db)):
+
+    return {'ok': request.state.user}

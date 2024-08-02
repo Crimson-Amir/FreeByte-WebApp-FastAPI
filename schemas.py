@@ -22,33 +22,36 @@ class Product(ProductBase):
 
 
 class UserBase(BaseModel):
-    email : str = None
-    phone_number: int = None
+    email : str
+    name: str = None
     active : bool = False
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        if self.name is None:
+            self.name = self.email
 
 class UserCreate(UserBase):
     password: str
 
-
-class User(BaseModel):
+class User(UserBase):
     user_id: int
     class Config: orm_mode = True
 
 
-
-
 class ClientConfigBase(BaseModel):
-    config_email : str
-    traffic_mb : int
-    period_day : int
-    active : bool
+    traffic : int
+    period : int
     product_id : int
-    owner_id : int
+    active : bool = False
 
 class ClientConfigCreate(ClientConfigBase):
-    config_key: str
+    pass
 
+class ClientConfigCreateCrud(ClientConfigBase):
+    owner_id: int
 
 class ClientConfig(ClientConfigBase):
     config_id: int
     class Config: orm_mode = True
+

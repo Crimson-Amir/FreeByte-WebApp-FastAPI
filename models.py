@@ -10,6 +10,7 @@ class User(Base):
     user_id = Column(Integer, primary_key=True)
     email = Column(String, unique=True)
     phone_number = Column(BigInteger, unique=True, default=None)
+    name = Column(String)
     hashed_password = Column(String)
     active = Column(Boolean, default=True)
     register_date = Column(DateTime, default=datetime.now())

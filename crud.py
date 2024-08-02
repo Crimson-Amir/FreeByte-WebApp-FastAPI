@@ -1,7 +1,8 @@
 from sqlalchemy.orm import Session
 from hashlib import md5
 from . import models, schemas
-
+from random import randint
+from uuid import uuid4
 
 def hash_password_md5(password: str) -> str:
     password_bytes = password.encode()
@@ -23,7 +24,7 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
 
 def create_user(db: Session, user: schemas.UserCreate):
     hashed_password = hash_password_md5(user.password)
-    db_user = models.User(email=user.email, phone_number=user.phone_number, hashed_password=hashed_password)
+    db_user = models.User(name=user.name, email=user.email, hashed_password=hashed_password)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -40,3 +41,7 @@ def create_product(db: Session, item: schemas.ProductCreate):
     db.commit()
     db.refresh(db_item)
     return db_item
+
+def create_config(db: Session, config: schemas.ClientConfigCreateCrud, request):
+    config_email = request.state.user.email + str(randint(1, 10_000_000))
+    config_key = uuid4()

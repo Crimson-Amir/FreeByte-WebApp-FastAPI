@@ -1,52 +1,52 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<title>فری‌بایت | ثبت نام</title>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-	<!--	<link href="https://fonts.googleapis.com/css?family=Lato:300,400,700&display=swap" rel="stylesheet">-->
-
-	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-
-	<link rel="stylesheet" href="{{ url_for('static', path='authentication/css/style.css') }}">
-	<link rel="stylesheet" href="{{ url_for('static', path='index/my_custom_style.css') }}">
-
+    <title>فری‌بایت | ثبت نام</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', path='authentication/css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='index/my_custom_style.css') }}">
 </head>
 <body class="img js-fullheight" style="background-image: url({{ url_for('static', path='authentication/images/bg.jpg') }});">
 <section class="ftco-section">
-	<div class="container">
-		<div class="row justify-content-center">
-			<div class="col-md-6 text-center mb-5">
-				<h2 class="heading-section vazir_medium">ثبت نام در سایت</h2>
-			</div>
-		</div>
-		<div class="row justify-content-center">
-			<div class="col-md-6 col-lg-4">
-				<div class="login-wrap p-0">
-					<p class="mb-4 text-center vazir_regular" style="font-size: 23px;">از قبل اکانت دارید؟<a href="signin" class="vazir_regular" style="font-size: 21px;"> ورود</a></p>
-					<form action="/sign-up/" class="signin-form" method="post">
-						<div class="form-group">
-							<input type="text" class="form-control vazir_regular" name="email" placeholder="ایمیل" required>
-						</div>
-						<div class="form-group">
-							<input id="password-field" type="password" class="form-control vazir_regular" name="password" placeholder="رمزعبور" required>
-							<span toggle="#password-field" class="fa fa-fw fa-eye field-icon toggle-password"></span>
-						</div>
-						<div class="form-group">
-							<button type="submit" class="form-control btn btn-primary submit px-3 vazir_medium">ثبت نام</button>
-						</div>
-
-					</form>
-					<p class="w-100 text-center vazir_medium">&mdash; وارد شدن با &mdash;</p>
-					<div class="social d-flex text-center">
-						<a href="#" class="px-2 py-2 mr-md-1 rounded vazir_regular"><span class="ion-logo-facebook mr-2"></span> گوگل</a>
-						<a href="#" class="px-2 py-2 ml-md-1 rounded vazir_regular"><span class="ion-logo-twitter mr-2"></span> توییتر</a>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 text-center mb-5">
+                <h2 class="heading-section vazir_medium">ثبت نام در سایت</h2>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-4">
+                <div class="login-wrap p-0">
+                    <p class="mb-4 text-center vazir_regular" style="font-size: 23px;">از قبل اکانت دارید؟<a href="signin" class="vazir_regular" style="font-size: 21px;"> ورود</a></p>
+                    <form id="signup-form">
+                        <div class="form-group">
+                            <input type="text" class="form-control vazir_regular" name="name" placeholder="نام شما">
+                        </div>
+                        <div class="form-group">
+                            <input type="email" class="form-control vazir_regular" name="email" placeholder="ایمیل" required>
+                        </div>
+                        <div class="form-group">
+                            <input id="password-field" type="password" class="form-control vazir_regular" name="password" placeholder="رمزعبور" required>
+                            <span toggle="#password-field" class="fa fa-fw fa-eye field-icon toggle-password"></span>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="form-control btn btn-primary submit px-3 vazir_medium">ثبت نام</button>
+                        </div>
+                        <div class="form-group vazir_medium" id="error-message" style="color: red; display: none; text-align: center;">
+                            <p></p>
+                        </div>
+                    </form>
+                    <p class="w-100 text-center vazir_medium">&mdash; وارد شدن با &mdash;</p>
+                    <div class="social d-flex text-center">
+                        <a href="#" style="margin-right: 10px;" class="px-2 py-2 mr-md-1 rounded vazir_regular"><span class="ion-logo-facebook mr-2"></span> گوگل</a>
+                        <a href="#" class="px-2 py-2 ml-md-1 rounded vazir_regular"><span class="ion-logo-twitter mr-2"></span> توییتر</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
 
 <script src="{{ url_for('static', path='authentication/js/jquery.min.js') }}"></script>
@@ -54,7 +54,53 @@
 <script src="{{ url_for('static', path='authentication/js/bootstrap.min.js') }}"></script>
 <script src="{{ url_for('static', path='authentication/js/main.js') }}"></script>
 
+<script>
+    const errorMessages = {
+        "email already registred.": ".ایمیل از قبل وجود دارد"
+    };
+
+    document.getElementById('signup-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const form = event.target;
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        fetch('/sign-up/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json().then(data => ({status: response.status, body: data})))
+        .then(({status, body}) => {
+            const errorMessageElement = document.getElementById('error-message');
+            errorMessageElement.style.display = 'block';
+            if (status === 200) {
+
+                errorMessageElement.style.color = 'lime';
+                errorMessageElement.querySelector('p').textContent = '...ثبت نام موفقیت آمیز بود. در حال انتقال';
+                setTimeout(() => {
+                    window.location.href = '/home';
+                }, 2000); // Redirect after 2 seconds
+            } else {
+                // Display error message
+                const errorMessage = body.detail || '.خطایی رخ داده است. لطفاً مجدداً تلاش کنید';
+                const translatedErrorMessage = errorMessages[errorMessage] || errorMessage;
+                errorMessageElement.style.color = 'red';
+                errorMessageElement.querySelector('p').textContent = translatedErrorMessage;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            const errorMessageElement = document.getElementById('error-message');
+            errorMessageElement.style.display = 'block';
+            errorMessageElement.style.color = 'red';
+            errorMessageElement.querySelector('p').textContent = '.خطایی رخ داده است. لطفاً مجدداً تلاش کنید';
+        });
+    });
+</script>
 
 </body>
 </html>
-
