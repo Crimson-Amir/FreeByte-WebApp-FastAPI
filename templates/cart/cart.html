@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>فری‌بایت | خرید محصول</title>
+    <link href="{{ url_for('static', path='cart/style.css') }}" rel="stylesheet" />
+    <link href="{{ url_for('static', path='index/my_custom_style.css') }}" rel="stylesheet" />
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+    <style>
+        body {
+            direction: rtl;
+            text-align: right;
+            font-family: 'Vazir', sans-serif;
+        }
+
+        .summary {
+            border-radius: 20px 0 0 20px;
+            padding: 25px;
+            background-color: #f8f9fa;
+        }
+        .summary h5 {
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .nav-tabs {
+            border-bottom: 2px solid #ddd;
+        }
+        .nav-tabs .nav-item.show .nav-link, .nav-tabs .nav-link.active {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px 5px 0 0;
+        }
+        .nav-tabs .nav-link {
+            color: #007bff;
+            border: none;
+            border-radius: 5px 5px 0 0;
+        }
+        .tab-content {
+            border: 1px solid #ddd;
+            border-top: none;
+            padding: 20px;
+            border-radius: 0 0 5px 5px;
+            background-color: #fff;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="row">
+        <div class="col-md-8 cart" style="border-radius: 0 20px 20px 0;">
+            <div class="title">
+                <div class="row">
+                    <div class="col"><h4><b>سبد خرید</b></h4></div>
+                    <div class="col align-self-center text-left text-muted">{{ list_len }} آیتم</div>
+                </div>
+            </div>
+
+            {% if db_cart.v2ray_configs %}
+            {% for config in db_cart.v2ray_configs %}
+            <div>
+                <div class="row border-top border-bottom" style="margin-right: 0;">
+                    <div class="row main align-items-center" style="margin-right: 0;">
+                        <div class="col" style="padding-right: 20px; max-width: 15%;">
+                            <div class="row text-muted">پکیج VPN</div>
+                            <div class="row">پلن {{ config.plan_name }}</div>
+                        </div>
+                        <div class="col" style="max-width: 23%;">
+                            <a href="#">+</a><a href="#" class="border">1</a><a href="#">-</a>
+                        </div>
+                        <div class="col" style="max-width: 28%;">
+                            <div class="row">مدت زمان: {{ config.period_day }} روز</div>
+                            <div class="row">ترافیک: {{ config.traffic_gb }} گیگابایت</div>
+                        </div>
+                        <div class="col" style="display: flex; justify-content: space-around; justify-content: space-between; max-width: 31%;">
+                            {{ config.price }} تومان <span class="close" style="margin-left: 0;">&#10005;</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div>
+                سبدخرید شما خالی است
+            </div>
+            {% endif %}
+
+            <div class="back-to-shop"><a href="#">&leftarrow;</a><span class="text-muted">بازگشت به فروشگاه</span></div>
+        </div>
+        <div class="col-md-4 summary">
+
+            <div><h5 class="vazir_regular"><b>خلاصه سفارش</b></h5></div>
+            <hr>
+            <div class="row">
+                <div class="col vazir_regular" style="padding-left: 0;">مجموع قیمت:</div>
+                <div class="col text-left vazir_regular">{{ price }} تومان</div>
+            </div>
+
+            <!-- زبانه‌های پرداخت -->
+            <ul class="nav nav-tabs" id="paymentTabs" role="tablist" style="padding-right: 0;margin-top: 25px;">
+                <li class="nav-item">
+                    <a style="padding: 7px;" class="nav-link active" id="crypto-tab" data-toggle="tab" href="#crypto" role="tab" aria-controls="crypto" aria-selected="true">پرداخت با کریپتو</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="card-tab" data-toggle="tab" href="#card" role="tab" aria-controls="card" aria-selected="false">کارت به کارت</a>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="paymentTabsContent">
+                <!-- تب پرداخت با کریپتو -->
+                <div class="tab-pane fade show active" id="crypto" role="tabpanel" aria-labelledby="crypto-tab">
+                    <p>شما میتوانید با استفاده از درگاه پرداخت کریپتو پرداخت خودتون رو به صورت اتوماتیک انجام بدید.
+                    <br>
+                        بعد از پرداخت به سایت برمیگردید و سرویس رو دریافت میکنید
+                    </p>
+                    <button class="btn btn-primary">پرداخت با کریپتو</button>
+                </div>
+
+                <div class="tab-pane fade" id="card" role="tabpanel" aria-labelledby="card-tab">
+                    <p>لطفا مبلغ مورد نظر رو به شماره کارت زیر واریز کنید و عکس رسید رو در فیلد زیر آپلود کنید، سرویس بعد از بررسی توسط ما برای شما ارسال میشه که ممکنه از چند دقیقه تا چند ساعت زمان ببره.
+                    <br>
+                    <br>
+                         شماره کارت: <code>6219861938619417</code>  امیرحسین نجفی
+                    </p>
+                    <input type="file" class="form-control" />
+                    <button class="btn btn-primary" style="margin-top: 10px;">ارسال رسید</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

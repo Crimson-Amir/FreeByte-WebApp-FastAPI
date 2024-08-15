@@ -1,8 +1,7 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import update
 from hashlib import md5
 from . import models, schemas
-from random import randint
-from uuid import uuid4
 
 def hash_password_md5(password: str) -> str:
     password_bytes = password.encode()
@@ -30,9 +29,24 @@ def create_user(db: Session, user: schemas.UserCreate):
     db.refresh(db_user)
     return db_user
 
+def create_cart(db: Session, user_id: int):
+    db_cart = models.Cart(owner_id=user_id)
+    db.add(db_cart)
+    db.commit()
+    db.refresh(db_cart)
+    return db_cart
+
+def add_to_cart(db: Session, cart_id: int, config_id: int):
+    add_relation = models.cart_v2ray_config_association.insert().values(cart_id=cart_id, config_id=config_id)
+    db.execute(add_relation)
+    db.commit()
+    return add_relation
 
 def get_product(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Product).offset(skip).limit(limit).all()
+
+def get_cart(db: Session, user_id: int):
+    return db.query(models.Cart).filter(user_id == models.Cart.owner_id).first()
 
 
 def create_product(db: Session, item: schemas.ProductCreate):
@@ -42,6 +56,9 @@ def create_product(db: Session, item: schemas.ProductCreate):
     db.refresh(db_item)
     return db_item
 
-def create_config(db: Session, config: schemas.ClientConfigCreateCrud, request):
-    config_email = request.state.user.email + str(randint(1, 10_000_000))
-    config_key = uuid4()
+def create_config(db: Session, config: schemas.CreateConfigInDB):
+    db_config = models.V2RayConfig(**config.dict())
+    db.add(db_config)
+    db.commit()
+    db.refresh(db_config)
+    return db_config

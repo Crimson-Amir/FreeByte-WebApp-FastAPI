@@ -29,6 +29,7 @@
 <!-- ===============================================-->
 <!--    Main Content-->
 <!-- ===============================================-->
+
 <main class="main" id="top">
   <nav class="navbar navbar-expand-lg navbar-light fixed-top py-3" data-navbar-on-scroll="data-navbar-on-scroll">
     <div class="container"><a class="navbar-brand" href="#"><img src="{{ url_for('static', path='index/assets/img/icons/logo.png') }}" alt="" width="30" /><span class="text-1000 fs-1 ms-2 fw-medium">Free<span class="fw-bold" style="margin-right: 5px;">Byte</span></span></a>
@@ -75,6 +76,7 @@
       </div>
     </div>
     <!-- end of .container-->
+
 
   </section>
   <!-- <section> close ============================-->
@@ -125,6 +127,7 @@
                   <input type="hidden" name="traffic" class="traffic-input" value="20">
                   <input type="hidden" name="period" class="period-input" value="30">
                   <input type="hidden" name="product_id" class="product_id-input" value="1">
+                  <input type="hidden" name="config_id" class="config_id-input" value="1">
                   <input class="btn btn-outline-danger rounded-pill vazir_medium" type="submit" value="خرید">
                 </form>
                 {% else %}
@@ -170,6 +173,7 @@
                   <input type="hidden" name="traffic" class="traffic-input" value="30">
                   <input type="hidden" name="period" class="period-input" value="30">
                   <input type="hidden" name="product_id" class="product_id-input" value="1">
+                  <input type="hidden" name="config_id" class="config_id-input" value="2">
                   <input class="btn btn-outline-danger rounded-pill vazir_medium" type="submit" value="خرید">
                 </form>
                 {% else %}
@@ -220,6 +224,7 @@
                   <input type="hidden" name="traffic" class="traffic-input" value="60">
                   <input type="hidden" name="period" class="period-input" value="30">
                   <input type="hidden" name="product_id" class="product_id-input" value="1">
+                  <input type="hidden" name="config_id" class="config_id-input" value="3">
                   <input class="btn btn-outline-danger rounded-pill vazir_medium" type="submit" value="خرید">
                 </form>
                 {% else %}
@@ -257,6 +262,7 @@
           </div>
           <div class="price mb-4">قیمت: <span id="price">0.00</span> تومان</div>
           <input type="hidden" name="product_id" class="product_id-input" value="1">
+          <input type="hidden" name="config_id" class="config_id-input" value="0">
           <input class="btn btn-outline-danger rounded-pill vazir_medium" type="submit" value="خرید">
         </form>
         {% else %}
@@ -412,35 +418,60 @@
 <script src="{{ url_for('static', path='index/vendors/bootstrap/bootstrap.min.js') }}"></script>
 
 <script>
-  document.querySelectorAll('.buy-service-form').forEach(form => {
-        form.addEventListener('submit', event => {
-            event.preventDefault();
+document.querySelectorAll('.buy-service-form').forEach(form => {
+    form.addEventListener('submit', event => {
+        event.preventDefault();
+        console.log('Form submitted'); // پیام دیباگ
 
-            const traffic = form.querySelector('.traffic-input').value;
-            const period = form.querySelector('.period-input').value;
-            const product_id = form.querySelector('.product_id-input').value;
+        const traffic = form.querySelector('.traffic-input').value;
+        const period = form.querySelector('.period-input').value;
+        const product_id = form.querySelector('.product_id-input').value;
+        const config_id = form.querySelector('.config_id-input').value;
 
-            fetch('/buy', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    traffic: traffic,
-                    period: period,
-                    product_id: product_id,
-                }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Success:', data);
-                // Add any success handling logic here
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
+        fetch('/add_to_cart', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                traffic: traffic,
+                period: period,
+                product_id: product_id,
+                config_id: config_id
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'ok') {
+                showTemporaryMessage('Operation successful!', 'success');
+            } else if (data.status === 'error') {
+                showTemporaryMessage('There was an error with your request.', 'error');
+            } else {
+                showTemporaryMessage('Unexpected response from server.', 'error');
+            }
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            showTemporaryMessage('Failed to connect to the server.', 'error');
         });
     });
+});
+
+function showTemporaryMessage(message, type) {
+    const messageDiv = document.createElement('div');
+    messageDiv.textContent = message;
+    messageDiv.className = `temporary-message ${type}`;
+    document.body.appendChild(messageDiv);
+
+    console.log("Message added to DOM:", messageDiv);
+
+    setTimeout(() => {
+        messageDiv.remove();
+        console.log("Message removed from DOM");
+    }, 3000);
+}
+
+
 
 
 const timePeriodSlider = document.getElementById('time-period');
