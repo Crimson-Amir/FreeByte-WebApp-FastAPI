@@ -3,8 +3,8 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
-from . import models, schemas, crud
-from .database import SessionLocal, engine
+from . import schemas, crud
+from .database import SessionLocal
 import jwt
 from.auth import SECRET_KEY, REFRESH_SECRET_KEY, create_access_token, create_refresh_token
 
@@ -151,15 +151,23 @@ async def loggin(request: Request):
         redirect.delete_cookie(key="refresh_token", httponly=True)
     return redirect
 
+async def calculate_total_price(v2ray_config_associations):
+    try:
+        return sum([config.v2ray_config.price * config.count for config in v2ray_config_associations])
+    except Exception as e:
+        print(e)
+
+
 @app.get('/cart')
 async def cart(request: Request, db: Session = Depends(get_db)):
     token = request.cookies.get("access_token")
     payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
     user_id = payload.get('user_id')
     db_cart = crud.get_cart(db, user_id)
-    list_len = len(db_cart.v2ray_configs)
-    price = sum([config.price for config in db_cart.v2ray_configs])
-    return templates.TemplateResponse(request=request, name='cart/cart.html', context={'db_cart': db_cart, 'list_len': list_len, 'price': price})
+    list_len = len(db_cart.v2ray_config_associations)
+    price = await calculate_total_price(db_cart.v2ray_config_associations)
+    return templates.TemplateResponse(request=request, name='cart/cart.html',
+                                      context={'db_cart': db_cart, 'list_len': list_len, 'price': price})
 
 
 @app.post('/add_to_cart/')
@@ -167,36 +175,60 @@ async def add_to_cart(config: schemas.ClientConfigReq, request: Request, db: Ses
     try:
         user_id = jwt.decode(request.cookies.get("access_token"), SECRET_KEY, algorithms=["HS256"]).get('user_id')
         cart_id = crud.get_cart(db, user_id)
-        crud.add_to_cart(db, cart_id.cart_id, config.config_id)
+        check_in_cart = crud.is_config_available_in_cart(db, cart_id.cart_id, config.config_id)
+        if check_in_cart:
+            crud.add_config_count_in_cart(db, cart_id.cart_id, config.config_id)
+        else:
+            crud.add_to_cart(db, cart_id.cart_id, config.config_id)
         return {'status': 'ok'}
+    except Exception as e:
+        print(e)
+        return {'status': 'error', 'reason': str(e)}
+
+@app.post('/add_config_count/')
+async def add_config_count(config: schemas.ClientConfigID, request: Request, db: Session = Depends(get_db)):
+    try:
+        user_id = jwt.decode(request.cookies.get("access_token"), SECRET_KEY, algorithms=["HS256"]).get('user_id')
+        cart_id = crud.get_cart(db, user_id)
+        check_in_cart = crud.is_config_available_in_cart(db, cart_id.cart_id, config.config_id)
+        if check_in_cart:
+            add_count = crud.add_config_count_in_cart(db, cart_id.cart_id, config.config_id)
+            new_price = add_count.count * add_count.v2ray_config.price
+            return {'status': 'ok', 'new_price': new_price}
+
+        return {'status': 'nok'}
     except Exception as e:
         return {'status': 'error', 'reason': str(e)}
 
+@app.patch('/subtract_config_count/')
+async def subtract_config_count(config: schemas.ClientConfigID, request: Request, db: Session = Depends(get_db)):
+    try:
+        user_id = jwt.decode(request.cookies.get("access_token"), SECRET_KEY, algorithms=["HS256"]).get('user_id')
+        cart_id = crud.get_cart(db, user_id)
+        check_in_cart = crud.is_config_available_in_cart(db, cart_id.cart_id, config.config_id)
+        if check_in_cart:
+            subtract = crud.subtract_config_count_in_cart(db, cart_id.cart_id, config.config_id)
+            new_price = subtract.count * subtract.v2ray_config.price
+            return {'status': 'ok', 'new_price': new_price}
+        return {'status': 'nok'}
+    except Exception as e:
+        return {'status': 'error', 'reason': str(e)}
 
-@app.post('/create-v2ray-config/')
+@app.patch('/create-v2ray-config/')
 async def create_v2ray_config(config: schemas.CreateConfigInDB, db: Session = Depends(get_db)):
     return crud.create_config(db, config)
-
 
 @app.post('/create-product/')
 async def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db)):
     return crud.create_product(db, product)
 
-
-@app.post('/sign-up/', response_model=schemas.User)
-async def create_user(user: schemas.UserCreate, response: Response, db: Session = Depends(get_db)):
-    db_user = crud.get_user_by_email(db, user.email)
-    if db_user: raise HTTPException(400, 'email already registred.')
-
-    create_user_db = crud.create_user(db, user)
-    crud.create_cart(db, create_user_db.user_id )
-
-    user_data = {"email": create_user_db.email, "name": create_user_db.name, "user_id": create_user_db.user_id}
-
-    access_token = create_access_token(data=user_data)
-    cr_refresh_token = create_refresh_token(data=user_data)
-
-    response.set_cookie(key="access_token", value=access_token, httponly=True, secure=True, max_age=3600)
-    response.set_cookie(key="refresh_token", value=cr_refresh_token, httponly=True, secure=True, max_age=2_592_000)
-
-    return create_user_db
+@app.delete('/remove_from_cart/{cart_id}/{config_id}')
+async def remove_from_cart(cart_id: int, config_id: int, db: Session = Depends(get_db)):
+    try:
+        remove = crud.remove_from_cart(db, cart_id, config_id)
+        new_price = await calculate_total_price(remove.cart.v2ray_config_associations)
+        return {'status': 'ok', 'config_id': cart_id,
+                'new_item_count': len(remove.cart.v2ray_config_associations), 'new_price': new_price}
+    except Exception as e:
+        print(e)
+        return {'status': 'error', 'reason': str(e)}

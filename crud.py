@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import update
+from sqlalchemy import update, insert, delete
 from hashlib import md5
 from . import models, schemas
 
@@ -37,10 +37,50 @@ def create_cart(db: Session, user_id: int):
     return db_cart
 
 def add_to_cart(db: Session, cart_id: int, config_id: int):
-    add_relation = models.cart_v2ray_config_association.insert().values(cart_id=cart_id, config_id=config_id)
+    add_relation = insert(models.CartV2RayConfigAssociation).values(cart_id=cart_id, config_id=config_id)
     db.execute(add_relation)
     db.commit()
     return add_relation
+
+
+def add_config_count_in_cart(db: Session, cart_id: int, config_id: int):
+    add_relation = (
+        update(models.CartV2RayConfigAssociation)
+        .where(models.CartV2RayConfigAssociation.cart_id == cart_id)
+        .where(models.CartV2RayConfigAssociation.config_id == config_id)
+        .values(count=models.CartV2RayConfigAssociation.count + 1)
+        .returning(models.CartV2RayConfigAssociation)
+    )
+    result = db.execute(add_relation)
+    db.commit()
+
+    return result.scalar()
+
+def subtract_config_count_in_cart(db: Session, cart_id: int, config_id: int):
+    update_stmt = (
+        update(models.CartV2RayConfigAssociation)
+        .where(models.CartV2RayConfigAssociation.cart_id == cart_id)
+        .where(models.CartV2RayConfigAssociation.config_id == config_id)
+        .where(models.CartV2RayConfigAssociation.count > 1)
+        .values(count=models.CartV2RayConfigAssociation.count - 1)
+        .returning(models.CartV2RayConfigAssociation)
+    )
+
+    result = db.execute(update_stmt)
+    db.commit()
+    return result.scalar()
+
+def remove_from_cart(db: Session, cart_id: int, config_id: int):
+    remove_relation = (delete(models.CartV2RayConfigAssociation)
+                       .where(models.CartV2RayConfigAssociation.cart_id == cart_id)
+                       .where(models.CartV2RayConfigAssociation.config_id == config_id)
+                       .returning(models.CartV2RayConfigAssociation))
+
+    execute = db.execute(remove_relation)
+    db.commit()
+    result = execute.scalar()
+    return result
+
 
 def get_product(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Product).offset(skip).limit(limit).all()
@@ -48,6 +88,11 @@ def get_product(db: Session, skip: int = 0, limit: int = 100):
 def get_cart(db: Session, user_id: int):
     return db.query(models.Cart).filter(user_id == models.Cart.owner_id).first()
 
+def is_config_available_in_cart(db: Session, cart_id: int, config_id: int):
+    return (db.query(models.CartV2RayConfigAssociation)
+            .filter(models.CartV2RayConfigAssociation.cart_id == cart_id)
+            .filter(models.CartV2RayConfigAssociation.config_id == config_id)
+            .first())
 
 def create_product(db: Session, item: schemas.ProductCreate):
     db_item = models.Product(**item.dict())

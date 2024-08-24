@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 
 class ProductBase(BaseModel):
-
     server_address: str
     server_port: int
     protocol: str
@@ -49,6 +48,9 @@ class ClientConfigBase(BaseModel):
 
 class ClientConfigReq(ClientConfigBase):
     pass
+
+class ClientConfigID(BaseModel):
+    config_id: int
 
 class CreateConfigInDB(BaseModel):
     plan_name: str
