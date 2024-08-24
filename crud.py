@@ -107,3 +107,10 @@ def create_config(db: Session, config: schemas.CreateConfigInDB):
     db.commit()
     db.refresh(db_config)
     return db_config
+
+def create_iran_invoice_before_pay(db: Session, invoice: schemas.CreateIranInvoiceBeforPay):
+    db_invoice = models.IranPaymentGewayInvoice(**invoice.dict())
+    db.add(db_invoice)
+    db.commit()
+    db.refresh(db_invoice)
+    return db_invoice

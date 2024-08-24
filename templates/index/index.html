@@ -43,15 +43,15 @@
         </ul>
         {% if request.state.user.email %}
 
-        <a href="/login/" class="btn btn-outline-danger rounded-pill order-0 vazir_medium">
+        <a href="/cart/" class="btn btn-outline-danger rounded-pill order-0 vazir_medium">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-person" viewBox="0 0 16 16">
             <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/>
           </svg>
           {{request.state.user.name}}
         </a>
-        <!--        <form action="/logout/" style="margin-right: 10px;" method="POST">-->
-        <!--            <input type="submit" class="btn btn-outline-danger rounded-pill order-0 vazir_medium" value="خارج شدن">-->
-        <!--        </form>-->
+        <form action="/logout/" style="margin-right: 10px;" method="POST">
+            <input type="submit" class="btn btn-outline-danger rounded-pill order-0 vazir_medium" value="خارج شدن">
+        </form>
         {% else %}
         <a href="/loggin/" class="btn btn-link text-1000 fw-medium order-1 order-lg-0 vazir_medium">ورود</a>
         <a href="sign-up/" class="btn btn-outline-danger rounded-pill order-0 vazir_medium">ثبت نام</a>
@@ -443,16 +443,16 @@ document.querySelectorAll('.buy-service-form').forEach(form => {
         .then(response => response.json())
         .then(data => {
             if (data.status === 'ok') {
-                showTemporaryMessage('Operation successful!', 'success');
+                showTemporaryMessage('سرویس با موفقیت به سبد خرید اضافه شد!', 'success');
             } else if (data.status === 'error') {
-                showTemporaryMessage('There was an error with your request.', 'error');
+                showTemporaryMessage('مشکلی در ارسال درخواست وجود داشت!', 'error');
             } else {
-                showTemporaryMessage('Unexpected response from server.', 'error');
+                showTemporaryMessage('جواب غیرمنتظره از سرور دریافت شد', 'error');
             }
         })
         .catch((error) => {
             console.error('Error:', error);
-            showTemporaryMessage('Failed to connect to the server.', 'error');
+            showTemporaryMessage('اتصال به سرور موفقیت آمیز نبود!', 'error');
         });
     });
 });
@@ -461,6 +461,16 @@ function showTemporaryMessage(message, type) {
     const messageDiv = document.createElement('div');
     messageDiv.textContent = message;
     messageDiv.className = `temporary-message ${type}`;
+
+    // اضافه کردن استایل برای نمایش پیام در بالای صفحه
+    messageDiv.style.position = 'fixed';
+    messageDiv.style.top = '80px';
+    messageDiv.style.left = '50%';
+    messageDiv.style.width = 'auto';
+    messageDiv.style.height = 'auto';
+    messageDiv.style.zIndex = '1031';
+    messageDiv.style.text_align = 'center';
+
     document.body.appendChild(messageDiv);
 
     console.log("Message added to DOM:", messageDiv);
@@ -470,6 +480,7 @@ function showTemporaryMessage(message, type) {
         console.log("Message removed from DOM");
     }, 3000);
 }
+
 
 
 

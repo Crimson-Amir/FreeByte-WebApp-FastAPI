@@ -64,28 +64,37 @@
             <div class="title">
                 <div class="row">
                     <div class="col"><h4><b>سبد خرید</b></h4></div>
-                    <div class="col align-self-center text-left text-muted">{{ list_len }} آیتم</div>
+                    <div class="col align-self-center text-left text-muted item_holder">{{ list_len }} آیتم</div>
                 </div>
             </div>
-
-            {% if db_cart.v2ray_configs %}
-            {% for config in db_cart.v2ray_configs %}
+            {% if db_cart.v2ray_config_associations %}
+            {% for config in db_cart.v2ray_config_associations %}
             <div>
                 <div class="row border-top border-bottom" style="margin-right: 0;">
                     <div class="row main align-items-center" style="margin-right: 0;">
                         <div class="col" style="padding-right: 20px; max-width: 15%;">
                             <div class="row text-muted">پکیج VPN</div>
-                            <div class="row">پلن {{ config.plan_name }}</div>
+                            <div class="row">پلن {{ config.v2ray_config.plan_name }}</div>
                         </div>
                         <div class="col" style="max-width: 23%;">
-                            <a href="#">+</a><a href="#" class="border">1</a><a href="#">-</a>
+                            <a href="#" class="increment" data-config-id="{{ config.v2ray_config.config_id }}" data-cart-id="{{ db_cart.cart_id }}">+</a>
+                            <a href="#" class="border" id="count-{{ config.v2ray_config.config_id }}">{{ config.count }}</a>
+                            <a href="#" class="decrement" data-config-id="{{ config.v2ray_config.config_id }}" data-cart-id="{{ db_cart.cart_id }}">-</a>
                         </div>
+
                         <div class="col" style="max-width: 28%;">
-                            <div class="row">مدت زمان: {{ config.period_day }} روز</div>
-                            <div class="row">ترافیک: {{ config.traffic_gb }} گیگابایت</div>
+                            <div class="row">مدت زمان: {{ config.v2ray_config.period_day }} روز</div>
+                            <div class="row">ترافیک: {{ config.v2ray_config.traffic_gb }} گیگابایت</div>
                         </div>
-                        <div class="col" style="display: flex; justify-content: space-around; justify-content: space-between; max-width: 31%;">
-                            {{ config.price }} تومان <span class="close" style="margin-left: 0;">&#10005;</span>
+                        <div class="col" style="display: flex; justify-content: space-around; justify-content: space-between; max-width: 31%;align-items: center;">
+                            <div>
+                                {{ config.v2ray_config.price }} تومان
+                            </div>
+                            <form class="buy-service-form">
+                                <input type="hidden" name="config_id" class="config_id-input" value="{{ config.v2ray_config.config_id }}">
+                                <input type="hidden" name="cart_id" class="cart_id-input" value="{{ db_cart.cart_id }}">
+                                <input type="submit" class="close" style="margin-left: 0;" value="&#10005;">
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -97,7 +106,7 @@
             </div>
             {% endif %}
 
-            <div class="back-to-shop"><a href="#">&leftarrow;</a><span class="text-muted">بازگشت به فروشگاه</span></div>
+            <div class="back-to-shop"><a href="/home/">&leftarrow;<span class="text-muted" style="margin-right: 5px;">بازگشت به فروشگاه</span></a></div>
         </div>
         <div class="col-md-4 summary">
 
@@ -105,44 +114,195 @@
             <hr>
             <div class="row">
                 <div class="col vazir_regular" style="padding-left: 0;">مجموع قیمت:</div>
-                <div class="col text-left vazir_regular">{{ price }} تومان</div>
+                <div class="col text-left vazir_regular summary_price">{{ price }} تومان</div>
             </div>
 
             <!-- زبانه‌های پرداخت -->
             <ul class="nav nav-tabs" id="paymentTabs" role="tablist" style="padding-right: 0;margin-top: 25px;">
                 <li class="nav-item">
-                    <a style="padding: 7px;" class="nav-link active" id="crypto-tab" data-toggle="tab" href="#crypto" role="tab" aria-controls="crypto" aria-selected="true">پرداخت با کریپتو</a>
+                    <a style="padding: 7px;" class="nav-link" id="crypto-tab" data-toggle="tab" href="#crypto" role="tab" aria-controls="crypto" aria-selected="true">پرداخت با کریپتو</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" id="card-tab" data-toggle="tab" href="#card" role="tab" aria-controls="card" aria-selected="false">کارت به کارت</a>
+                    <a class="nav-link active" id="card-tab" data-toggle="tab" href="#card" role="tab" aria-controls="card" aria-selected="false">کارت‌بانکی</a>
                 </li>
             </ul>
 
             <div class="tab-content" id="paymentTabsContent">
-                <!-- تب پرداخت با کریپتو -->
-                <div class="tab-pane fade show active" id="crypto" role="tabpanel" aria-labelledby="crypto-tab">
-                    <p>شما میتوانید با استفاده از درگاه پرداخت کریپتو پرداخت خودتون رو به صورت اتوماتیک انجام بدید.
-                    <br>
-                        بعد از پرداخت به سایت برمیگردید و سرویس رو دریافت میکنید
-                    </p>
-                    <button class="btn btn-primary">پرداخت با کریپتو</button>
+                <div class="tab-pane fade show active" id="card" role="tabpanel" aria-labelledby="card-tab">
+                    <form style="padding:0;" class="GoToPay">
+                        <p>
+                            با استفاده از درگاه پرداخت ریالی پرداخت خودتون رو انجام بدید.
+                        </p>
+                        <input type="hidden" class="payment-method" value="iran_payment_getway">
+                        <input type="submit" class="btn btn-primary" style="margin-top: 10px;" value="پرداخت با کارت بانکی">
+                    </form>
                 </div>
 
-                <div class="tab-pane fade" id="card" role="tabpanel" aria-labelledby="card-tab">
-                    <p>لطفا مبلغ مورد نظر رو به شماره کارت زیر واریز کنید و عکس رسید رو در فیلد زیر آپلود کنید، سرویس بعد از بررسی توسط ما برای شما ارسال میشه که ممکنه از چند دقیقه تا چند ساعت زمان ببره.
-                    <br>
-                    <br>
-                         شماره کارت: <code>6219861938619417</code>  امیرحسین نجفی
-                    </p>
-                    <input type="file" class="form-control" />
-                    <button class="btn btn-primary" style="margin-top: 10px;">ارسال رسید</button>
+                <div class="tab-pane fade" id="crypto" role="tabpanel" aria-labelledby="crypto-tab">
+                    <form style="padding:0;" class="GoToPay">
+                        <p>شما میتوانید با استفاده از درگاه پرداخت کریپتو پرداخت خودتون رو انجام بدید.
+                            بعد از پرداخت به سایت برمیگردید و سرویس رو دریافت میکنید
+                        </p>
+                        <input type="hidden" class="payment-method" value="crypto_payment_getway">
+                        <input type="submit" class="btn btn-primary" style="margin-top: 10px;" value="پرداخت با کریپتو">
+                    </form>
                 </div>
             </div>
+
         </div>
     </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    document.querySelectorAll('.increment').forEach(button => {
+    button.addEventListener('click', event => {
+        event.preventDefault();
+        const configId = button.getAttribute('data-config-id');
+        const cartId = button.getAttribute('data-cart-id');
+
+        fetch('/add_config_count/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ config_id: configId, cart_id: cartId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'ok') {
+                const countElement = document.getElementById(`count-${configId}`);
+                countElement.textContent = parseInt(countElement.textContent) + 1;
+
+                // بروزرسانی قیمت کل
+                const totalPriceElement = document.querySelector('.summary .summary_price');
+                totalPriceElement.textContent = `${data.new_price} تومان`;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    });
+});
+
+document.querySelectorAll('.decrement').forEach(button => {
+    button.addEventListener('click', event => {
+        event.preventDefault();
+        const configId = button.getAttribute('data-config-id');
+        const cartId = button.getAttribute('data-cart-id');
+
+        const countElement = document.getElementById(`count-${configId}`);
+        const currentCount = parseInt(countElement.textContent);
+
+        if (currentCount > 1) {
+            fetch('/subtract_config_count/', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ config_id: configId, cart_id: cartId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    countElement.textContent = currentCount - 1;
+
+                    const totalPriceElement = document.querySelector('.summary .summary_price');
+                    totalPriceElement.textContent = `${data.new_price} تومان`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        } else {
+            alert('امکان کاهش تعداد کمتر از 1 وجود ندارد.');
+        }
+    });
+});
+
+
+document.querySelectorAll('.buy-service-form').forEach(form => {
+    form.addEventListener('submit', event => {
+        event.preventDefault();
+
+        const configId = form.querySelector('.config_id-input').value;
+        const cartId = form.querySelector('.cart_id-input').value;
+
+        fetch(`/remove_from_cart/${cartId}/${configId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'ok') {
+                form.closest('.row').remove();
+                showTemporaryMessage('کانفیگ با موفقیت حذف شد', 'success');
+                const ItemHolder = document.querySelector('.item_holder');
+                ItemHolder.textContent = `${data.new_item_count} آیتم`;
+                const totalPriceElement = document.querySelector('.summary .summary_price');
+                totalPriceElement.textContent = `${data.new_price} تومان`;
+            } else {
+                showTemporaryMessage('مشکلی در ثبت درخواست وجود داشت!', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showTemporaryMessage('اتصال به سرور موفقیت‌آمیز نبود!', 'error');
+        });
+    });
+});
+
+
+
+function showTemporaryMessage(message, type) {
+    const messageDiv = document.createElement('div');
+    messageDiv.textContent = message;
+    messageDiv.className = `temporary-message ${type}`;
+
+    messageDiv.style.position = 'fixed';
+    messageDiv.style.top = '80px';
+    messageDiv.style.left = '50%';
+    messageDiv.style.width = 'auto';
+    messageDiv.style.height = 'auto';
+    messageDiv.style.zIndex = '1031';
+
+    document.body.appendChild(messageDiv);
+
+    console.log("Message added to DOM:", messageDiv);
+
+    setTimeout(() => {
+        messageDiv.remove();
+        console.log("Message removed from DOM");
+    }, 3000);
+}
+
+document.querySelectorAll('.GoToPay').forEach(form => {
+    form.addEventListener('submit', event => {
+        event.preventDefault();
+        console.log('Form submitted');
+
+        const payment_method = form.querySelector('.payment-method').value;
+
+        const hiddenForm = document.createElement('form');
+        hiddenForm.method = 'POST';
+        hiddenForm.action = '/payment';
+
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'payment_method';
+        hiddenInput.value = payment_method;
+
+        hiddenForm.appendChild(hiddenInput);
+        document.body.appendChild(hiddenForm);
+
+        hiddenForm.submit();
+    });
+});
+
+</script>
 </body>
 </html>

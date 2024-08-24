@@ -67,3 +67,16 @@ class ClientConfig(ClientConfigBase):
     config_id: int
     class Config: orm_mode = True
 
+class CreateIranInvoiceBeforPay(BaseModel):
+    action: str
+    id_holder: int
+    authority: str
+    amount: int
+    currency: str
+    callback_url: str
+    description: str
+    meta_data: str | None = None
+    is_final: bool | None = False
+    fee_type: str
+    fee: int
+    owner_id: int
