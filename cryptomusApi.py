@@ -54,6 +54,7 @@ class RequestFactory:
     async def run_requests(requests_list: Union[List[str], str], session_header: Optional[Dict[str, str]] = None,
                            headers: Optional[Dict[str, str]] = None, data: Optional[Dict] = None,
                            return_exceptions: bool = True):
+
         if isinstance(requests_list, str):
             requests_list = [requests_list]
 
@@ -202,4 +203,4 @@ def client(cryptomus_api_key: str, cryptomus_merchant_id: str, class_, **method_
 
 # cryptomus_api_key = 'xbPjwvsT6qiypVVwYHvUsjp5giSH2WUQ75oBDuiHSM7Wi5Zu2t9h8R02R7WC1ptF6FLfeDq1gyYTcHP9Rf4N2dwNcNTWA1PlaAaY666VGxs9foah4UXuYfTLXQfsAebW'
 # cryptomus_merchant_id = 'b493112a-350e-4c57-ad74-91b608a36af9'
-# print(client(cryptomus_api_key, cryptomus_merchant_id, InvoiceInfo, order_id='3ccd202f', uuid=None))
+# print(client(cryptomus_api_key, cryptomus_merchant_id, CreateInvoice, order_id='fasfassaf3r2', currency='USD', amount='20'))

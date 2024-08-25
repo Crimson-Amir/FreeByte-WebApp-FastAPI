@@ -62,6 +62,8 @@ class CreateConfigInDB(BaseModel):
     active: float = False
     product_id: int
     owner_id: int | None
+    update: bool | None = None
+    client_address: str | None = None
 
 class ClientConfig(ClientConfigBase):
     config_id: int
@@ -79,4 +81,19 @@ class CreateIranInvoiceBeforPay(BaseModel):
     is_final: bool | None = False
     fee_type: str
     fee: int
+    owner_id: int
+
+
+class CreateCryptomusInvoiceBeforPay(BaseModel):
+    amount: str
+    action: str
+    id_holder: int
+    currency: str
+    lifetime: int
+    order_id: str
+    callback_url: str
+    is_payment_multiple: bool = True
+    additional_data: str
+    is_refresh: bool
+    is_final: bool = False
     owner_id: int

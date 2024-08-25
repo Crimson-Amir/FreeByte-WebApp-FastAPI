@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پرداخت ناموفق</title>
+    <style>
+        body {
+            font-family: 'IRANSans', sans-serif;
+            background-color: #f0f0f0;
+            text-align: center;
+            padding: 50px;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            padding: 30px;
+        }
+        h1 {
+            color: #f44336;
+            font-size: 24px;
+        }
+        p {
+            font-size: 18px;
+            color: #333;
+        }
+        ul {
+            text-align: right;
+            color: #666;
+        }
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #f44336;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        a:hover {
+            background-color: #e53935;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>پرداخت شما ناموفق بود</h1>
+        <p>متاسفانه پرداخت شما با خطا مواجه شد. دلیل خطا:</p>
+        <ul>
+            <li>{{ error_reason }} | کد خطا: {{ error_code }}</li>
+        </ul>
+        <p>اگر فکر میکنید مشکلی وجود دارد، لطفا از طریق ربات با پشتیبانی در ارتباط باشید.</p>
+        <a href="https://t.me/Fensor_Bot">بازگشت به ربات</a>
+    </div>
+</body>
+</html>

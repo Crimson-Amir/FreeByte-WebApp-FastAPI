@@ -3,9 +3,10 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
-from . import schemas, crud, private
+from . import schemas, crud, private, cryptomusApi, get_teter_price, api_clean
 from .database import SessionLocal
-import jwt, uuid
+import jwt, uuid, json, aiohttp, pytz
+from datetime import datetime, timedelta
 from.auth import SECRET_KEY, REFRESH_SECRET_KEY, create_access_token, create_refresh_token
 from .zarinPalAPI import SendInformation, InformationData
 
@@ -15,6 +16,22 @@ def get_db():
     db = SessionLocal()
     try: yield db
     finally: db.close()
+
+class ConnectToServer:
+    api_operation = api_clean.XuiApiClean(get_db)
+    last_update = None
+
+    def refresh_token(self):
+        now = datetime.now()
+        if self.last_update:
+            if (self.last_update + timedelta(minutes=5)) < now:
+                self.api_operation.refresh_connecion()
+                self.last_update = now
+        else:
+            self.api_operation.refresh_connecion()
+            self.last_update = now
+
+connect_to_server_instance = ConnectToServer()
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
@@ -194,7 +211,7 @@ async def add_config_count(config: schemas.ClientConfigID, request: Request, db:
         check_in_cart = crud.is_config_available_in_cart(db, cart_id.cart_id, config.config_id)
         if check_in_cart:
             add_count = crud.add_config_count_in_cart(db, cart_id.cart_id, config.config_id)
-            new_price = add_count.count * add_count.v2ray_config.price
+            new_price = await calculate_total_price(add_count.cart.v2ray_config_associations)
             return {'status': 'ok', 'new_price': new_price}
         return {'status': 'nok'}
     except Exception as e:
@@ -208,7 +225,7 @@ async def subtract_config_count(config: schemas.ClientConfigID, request: Request
         check_in_cart = crud.is_config_available_in_cart(db, cart_id.cart_id, config.config_id)
         if check_in_cart:
             subtract = crud.subtract_config_count_in_cart(db, cart_id.cart_id, config.config_id)
-            new_price = subtract.count * subtract.v2ray_config.price
+            new_price = await calculate_total_price(subtract.cart.v2ray_config_associations)
             return {'status': 'ok', 'new_price': new_price}
         return {'status': 'nok'}
     except Exception as e:
@@ -232,70 +249,197 @@ async def remove_from_cart(cart_id: int, config_id: int, db: Session = Depends(g
         return {'status': 'error', 'reason': str(e)}
 
 
-async def iran_initialization_payment(db, user_id, action, amount, id_holder=None, currency='IRT'):
+async def iran_initialization_payment(database, user_id, action, amount, id_holder=None, currency='IRT'):
     try:
-        payment_nstance = SendInformation(private.merchent_id)
+        payment_nstance = SendInformation(private.zarinpal_merchent_id)
         send_information: InformationData = await payment_nstance.execute(
-            merchent_id=private.merchent_id, amount=amount, currency=currency, description=action,
-            callback_url=private.callback_url
+            merchent_id=private.zarinpal_merchent_id, amount=amount, currency=currency, description=action,
+            callback_url=private.iran_callback_url
         )
 
         if not send_information: return False
 
         invoice = schemas.CreateIranInvoiceBeforPay(
             action=action, id_holder=id_holder, authority=send_information.authority, amount=amount, currency=currency,
-            callback_url=private.callback_url, description=action, meta_data=None, is_final=False,
+            callback_url=private.iran_callback_url, description=action, meta_data=None, is_final=False,
             fee_type=send_information.fee_type, fee=send_information.fee, owner_id=user_id
         )
 
-        crud.create_iran_invoice_before_pay(db, invoice)
+        crud.create_iran_invoice_before_pay(database, invoice)
         return send_information
 
     except Exception as e:
         return False
 
-def crypto_initialization_payment(price, user):
+async def crypto_initialization_payment(database, user_id, amount, action, id_holder):
     currency = 'USD'
     lifetime = 3600
+    dollar_price_now = get_teter_price.get_teter_price_in_rial()
+    if dollar_price_now == 0:
+        dollar_price_now = 60000
+
+    amount = str(amount / dollar_price_now)
     order_id = uuid.uuid4().hex
 
-    sqlite_manager.insert('Cryptomus', rows={'amount': str(dollar_price),
-                                             'currency': currency,
-                                             'lifetime': lifetime,
-                                             'order_id': order_id,
-                                             'chat_id': int(user["id"])})
+    additional_data = json.dumps({
+        'order_id': order_id,
+        'user_id': user_id,
+        'action': action,
+        'id_holder': id_holder,
+        'amount': amount
+    })
 
+    invoice = schemas.CreateCryptomusInvoiceBeforPay(
+        amount=amount, action=action, id_holder=id_holder, currency=currency, lifetime=lifetime, order_id=order_id,
+        callback_url=private.cryptomus_callback_url, is_payment_multiple=True, additional_data=additional_data,
+        is_refresh=False, is_final=False, owner_id=user_id
+    )
 
-    create_api = cryptomusApi.client(cryptomus_api_key, cryptomus_merchant_id, cryptomusApi.CreateInvoice,
-                                     amount=str(dollar_price), currency=currency,
-                                     order_id=order_id, lifetime=lifetime, additional_data=json.dumps(additional_data))
+    crud.create_cryptomus_invoice_before_pay(database, invoice)
+
+    home_url, my_product_url = f'{private.app_url}/home/', f'{private.app_url}/my_product/'
+
+    class_instance = cryptomusApi.CreateInvoice(private.cryptomus_api_key, private.cryptomus_merchant_id)
+    create_api = await class_instance.execute(amount=amount, currency=currency, order_id=order_id, lifetime=lifetime,
+                                              additional_data=additional_data, url_success= my_product_url,
+                                              url_return=home_url, url_callback=private.cryptomus_callback_url)
 
     if create_api:
-        invoice_link = create_api[0].get('result', {}).get('url')
-        if not invoice_link:
-            raise ValueError(f'cryptomus url does not exist. result -> {create_api}')
-    else:
-        raise ValueError(f'cryptomus is empty. result -> {create_api}')
+        invoice_link = create_api['result']['url']
+        return invoice_link
 
+    raise ValueError(f'cryptomus result is empty. result: {create_api}')
 
-    return dollar_price, invoice_link, order_id
 
 @app.post('/payment/')
 async def payment( request: Request, payment_method: str = Form(...), db: Session = Depends(get_db)):
     try:
+        action = 'cart_payment'
         user_id = jwt.decode(request.cookies.get("access_token"), SECRET_KEY, algorithms=["HS256"]).get('user_id')
         db_cart = crud.get_cart(db, user_id)
-        price = await calculate_total_price(db_cart.v2ray_config_associations)
+        amount = await calculate_total_price(db_cart.v2ray_config_associations)
 
         if payment_method == 'iran_payment_getway':
             get_data = await iran_initialization_payment(
-                db=db, user_id=user_id, action='cart_payment', amount=price, id_holder=db_cart.cart_id
+                database=db, user_id=user_id, action=action, amount=amount, id_holder=db_cart.cart_id
             )
             if not get_data: return {'status': 'the invoice was not created'}
             return RedirectResponse(f'https://payment.zarinpal.com/pg/StartPay/{get_data.authority}')
         else:
-            return {'status': 'soon'}
+            link = await crypto_initialization_payment(
+                database=db, user_id=user_id, amount=amount, action=action, id_holder=db_cart.cart_id
+            )
+            if not link: return {'status': 'the invoice was not created'}
+            return templates.TemplateResponse(request=request, name='cart/send_user_to_payment_getway.html', context={'link': link})
 
     except Exception as e:
         print(e)
-        return {'status': 'error', 'reason': str(e)}
+        return {'status': 'error'}
+
+class SendRequest:
+    @staticmethod
+    async def send_request(method, url, params=None, json=None, data=None, header=None, session_header=None):
+        async with aiohttp.ClientSession(headers=session_header) as session:
+            async with session.request(method, url, params=params, json=json, data=data, headers=header) as response:
+                return await response.json()
+
+async def verify_iran_payment(authority: str, amount: int):
+    url = 'https://payment.zarinpal.com/pg/v4/payment/verify.json'
+    json_payload = {
+        'merchant_id': private.zarinpal_merchent_id,
+        'amount': amount,
+        'authority': authority
+    }
+    make_request = SendRequest()
+    response = await make_request.send_request('post', url, json=json_payload)
+
+    return response
+
+def second_to_ms(date, time_to_ms: bool = True):
+    if time_to_ms:
+        return int(date.timestamp() * 1000)
+    else:
+        seconds = date / 1000
+        return datetime.fromtimestamp(seconds)
+
+def traffic_to_gb(traffic, byte_to_gb:bool = True):
+    if byte_to_gb:
+        return traffic / (1024 ** 3)
+    else:
+        return int(traffic * (1024 ** 3))
+
+def create_new_service_for_user(service, database, ref_id, user_id):
+    config_key, config_email = uuid.uuid4().hex, f'{service.config_id}_{ref_id}'
+    connect_to_server_instance.refresh_token()
+
+    period = service.period_day
+    traffic_to_gigabyte = traffic_to_gb(service.traffic_gb, False)
+    now_data_add_day = datetime.now(pytz.timezone('Asia/Tehran')) + timedelta(days=period)
+    time_to_ms = second_to_ms(now_data_add_day)
+
+    data = {
+        "id": service.inbound_id,
+        "settings": "{{\"clients\":[{{\"id\":\"{0}\",\"alterId\":0,\"start_after_first_use\":true,"
+                    "\"email\":\"{1}\",\"limitIp\":0,\"totalGB\":{2},\"expiryTime\":{3},"
+                    "\"enable\":true,\"tgId\":\"\",\"subId\":\"\"}}]}}".format(
+            config_key, config_email, traffic_to_gigabyte, time_to_ms)
+    }
+
+    connect_to_server_instance.api_operation.add_client(data, service.product.server_address)
+    check_servise_available = connect_to_server_instance.api_operation.get_client(
+        config_email, domain=service.product.server_address)
+
+    if not check_servise_available['obj']:
+        return
+
+    client_address = connect_to_server_instance.api_operation.get_client_url(
+        config_email, service.inbound_id, domain=service.iran_domain_address,
+        server_domain=service.server_address, host=service.header_host, header_type=service.header_type)
+
+    create_config_schema = schemas.CreateConfigInDB(
+        plan_name=service.plane_name, config_key=config_key, config_email=config_email, traffic_gb=service.traffic_gb,
+        period_day=service.period_day, price=service.price, active=True, product_id=service.product_id,
+        owner_id=user_id, client_address=client_address
+    )
+
+    create_config_db = crud.create_config(database, create_config_schema)
+
+    return create_config_db
+
+@app.get('/iran_recive_payment_result/')
+async def recive_payment_result(Authority: str, Status: str, request: Request, db: Session = Depends(get_db)):
+
+    if Status == 'OK':
+        get_from_data = crud.get_payment_detail_by_authority(db, Authority)
+
+        if not get_from_data:
+            return templates.TemplateResponse(request=request, name='cart/fail_pay.html',
+                                              context={'error_reason': f'تراکنش مورد نظر در دیتابیس ما وجود ندارد. آیدی تراکنش {Authority}', 'error_code': 403})
+
+        amount, payment_action = get_from_data.amount, get_from_data.action
+        cart_id, user_id = get_from_data.id_holder, get_from_data.user_id
+
+        response = await verify_iran_payment(Authority, amount)
+
+        if response.get('data', {}).get('code', 101) == 100:
+            ref_id = response.get('data').get('ref_id')
+
+            with db.begin():
+                try:
+                    crud.clear_cart(db, cart_id)
+                    get_cart = crud.get_cart(db, user_id)
+
+                    for service in get_cart.v2ray_config_associations:
+                        if service.update:
+                            continue
+
+                        service_count = service.cart_associations.count
+                        for _ in range(service_count):
+                            create = create_new_service_for_user(service, db, ref_id, user_id)
+                            if not create: raise ValueError('config is not available in server')
+
+                except Exception as e:
+                    print(e)
+                    price = await calculate_total_price(service.cart_associations.cart.v2ray_config_associations)
+                    crud.add_credit_to_user(db, user_id, price)
+

@@ -15,6 +15,8 @@ class User(Base):
     active = Column(Boolean, default=True)
     register_date = Column(DateTime, default=datetime.now())
 
+    credit = Column(Integer, default=0)
+
     config = relationship("V2RayConfig", back_populates="owner")
     cart = relationship("Cart", back_populates="owner")
 
@@ -25,9 +27,11 @@ class Product(Base):
     __tablename__ = 'Product'
 
     product_id = Column(Integer, primary_key=True, autoincrement=True)
-    server_address = Column(String, nullable=False)
-    server_port = Column(Integer, nullable=False)
+    country = Column(String)
     protocol = Column(String, nullable=False)
+    server_address = Column(String, nullable=False)
+    iran_domain_address = Column(String, nullable=False)
+    server_port = Column(Integer, nullable=False)
     encryption = Column(String, default='none')
     security = Column(String, default='none')
     network_type = Column(String, default='tcp')
@@ -54,10 +58,15 @@ class V2RayConfig(Base):
     plan_name = Column(String)
     config_key = Column(String, unique=True)
     config_email = Column(String, unique=True)
+    inbound_id = Column(Integer)
     traffic_gb = Column(Integer)
     period_day = Column(Integer)
     price = Column(Integer)
     active = Column(Boolean, default=True)
+
+    update = Column(Boolean, default=False)
+    client_address = Column(String, nullable=True)
+
     register_date = Column(DateTime, default=datetime.now())
 
     product_id = Column(Integer, ForeignKey('Product.product_id'))
@@ -102,7 +111,7 @@ class CryptomusPaymentGewayInvoice(Base):
     __tablename__ = 'cryptomus_payment_geway_invoice'
 
     invoice_id = Column(Integer, primary_key=True, autoincrement=True)
-    amount = Column(Integer, nullable=False)
+    amount = Column(String, nullable=False)
     action = Column(String)
     id_holder = Column(Integer, nullable=False)
     currency = Column(String)

@@ -20,6 +20,20 @@ def get_user_by_email(db: Session, email: str):
 def get_users(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.User).offset(skip).limit(limit).all()
 
+def add_credit_to_user(db, user_id: int, credit: int):
+    add_credit = (
+        update(models.User)
+        .where(models.User.user_id == user_id)
+        .values(credit=models.User.credit + credit)
+        .returning(models.User)
+    )
+    result = db.execute(add_credit)
+    db.commit()
+
+    return result.scalar()
+
+def get_all_server(db: Session):
+    return db.query(models.Product).distinct.all()
 
 def create_user(db: Session, user: schemas.UserCreate):
     hashed_password = hash_password_md5(user.password)
@@ -85,8 +99,18 @@ def remove_from_cart(db: Session, cart_id: int, config_id: int):
 def get_product(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Product).offset(skip).limit(limit).all()
 
+def get_payment_detail_by_authority(db: Session, authority: str):
+    return db.query(models.IranPaymentGewayInvoice).filter(models.IranPaymentGewayInvoice.authority == authority)
+
 def get_cart(db: Session, user_id: int):
     return db.query(models.Cart).filter(user_id == models.Cart.owner_id).first()
+
+def clear_cart(db: Session, cart_id: int):
+    clear_cart_db = delete(models.CartV2RayConfigAssociation).where(models.CartV2RayConfigAssociation.cart_id == cart_id)
+    execute = db.execute(clear_cart_db)
+    db.commit()
+    result = execute.scalar()
+    return result
 
 def is_config_available_in_cart(db: Session, cart_id: int, config_id: int):
     return (db.query(models.CartV2RayConfigAssociation)
@@ -110,6 +134,13 @@ def create_config(db: Session, config: schemas.CreateConfigInDB):
 
 def create_iran_invoice_before_pay(db: Session, invoice: schemas.CreateIranInvoiceBeforPay):
     db_invoice = models.IranPaymentGewayInvoice(**invoice.dict())
+    db.add(db_invoice)
+    db.commit()
+    db.refresh(db_invoice)
+    return db_invoice
+
+def create_cryptomus_invoice_before_pay(db: Session, invoice: schemas.CreateCryptomusInvoiceBeforPay):
+    db_invoice = models.CryptomusPaymentGewayInvoice(**invoice.dict())
     db.add(db_invoice)
     db.commit()
     db.refresh(db_invoice)
