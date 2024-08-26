@@ -31,35 +31,8 @@
 <!-- ===============================================-->
 
 <main class="main" id="top">
-  <nav class="navbar navbar-expand-lg navbar-light fixed-top py-3" data-navbar-on-scroll="data-navbar-on-scroll">
-    <div class="container"><a class="navbar-brand" href="#"><img src="{{ url_for('static', path='index/assets/img/icons/logo.png') }}" alt="" width="30" /><span class="text-1000 fs-1 ms-2 fw-medium">Free<span class="fw-bold" style="margin-right: 5px;">Byte</span></span></a>
-      <button class="navbar-toggler collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
-      <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav mx-auto border-bottom border-lg-bottom-0 pt-2 pt-lg-0">
-          <li class="nav-item"><a class="nav-link active active vazir_regular" aria-current="page" href="#">درباره‌ما</a></li>
-          <li class="nav-item"><a class="nav-link vazir_regular" href="#">ویژگی‌ها </a></li>
-          <li class="nav-item"><a class="nav-link vazir_regular" href="#"> خرید سرویس</a></li>
-          <li class="nav-item"><a class="nav-link vazir_regular" href="#">راهنمایی </a></li>
-        </ul>
-        {% if request.state.user.email %}
+  {% include 'header/header.html' %}
 
-        <a href="/cart/" class="btn btn-outline-danger rounded-pill order-0 vazir_medium">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-person" viewBox="0 0 16 16">
-            <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/>
-          </svg>
-          {{request.state.user.name}}
-        </a>
-        <form action="/logout/" style="margin-right: 10px;" method="POST">
-            <input type="submit" class="btn btn-outline-danger rounded-pill order-0 vazir_medium" value="خارج شدن">
-        </form>
-        {% else %}
-        <a href="/loggin/" class="btn btn-link text-1000 fw-medium order-1 order-lg-0 vazir_medium">ورود</a>
-        <a href="sign-up/" class="btn btn-outline-danger rounded-pill order-0 vazir_medium">ثبت نام</a>
-        {% endif %}
-      </div>
-    </div>
-  </nav>
-  <div></div>
 
   <!-- ============================================-->
   <!-- <section> begin ============================-->
@@ -418,118 +391,118 @@
 <script src="{{ url_for('static', path='index/vendors/bootstrap/bootstrap.min.js') }}"></script>
 
 <script>
-document.querySelectorAll('.buy-service-form').forEach(form => {
-    form.addEventListener('submit', event => {
-        event.preventDefault();
-        console.log('Form submitted'); // پیام دیباگ
+  document.querySelectorAll('.buy-service-form').forEach(form => {
+      form.addEventListener('submit', event => {
+          event.preventDefault();
+          console.log('Form submitted'); // پیام دیباگ
 
-        const traffic = form.querySelector('.traffic-input').value;
-        const period = form.querySelector('.period-input').value;
-        const product_id = form.querySelector('.product_id-input').value;
-        const config_id = form.querySelector('.config_id-input').value;
+          const traffic = form.querySelector('.traffic-input').value;
+          const period = form.querySelector('.period-input').value;
+          const product_id = form.querySelector('.product_id-input').value;
+          const config_id = form.querySelector('.config_id-input').value;
 
-        fetch('/add_to_cart', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                traffic: traffic,
-                period: period,
-                product_id: product_id,
-                config_id: config_id
-            }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'ok') {
-                showTemporaryMessage('سرویس با موفقیت به سبد خرید اضافه شد!', 'success');
-            } else if (data.status === 'error') {
-                showTemporaryMessage('مشکلی در ارسال درخواست وجود داشت!', 'error');
-            } else {
-                showTemporaryMessage('جواب غیرمنتظره از سرور دریافت شد', 'error');
-            }
-        })
-        .catch((error) => {
-            console.error('Error:', error);
-            showTemporaryMessage('اتصال به سرور موفقیت آمیز نبود!', 'error');
-        });
+          fetch('/add_to_cart', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                  traffic: traffic,
+                  period: period,
+                  product_id: product_id,
+                  config_id: config_id
+              }),
+          })
+          .then(response => response.json())
+          .then(data => {
+              if (data.status === 'ok') {
+                  showTemporaryMessage('سرویس با موفقیت به سبد خرید اضافه شد!', 'success');
+              } else if (data.status === 'error') {
+                  showTemporaryMessage('مشکلی در ارسال درخواست وجود داشت!', 'error');
+              } else {
+                  showTemporaryMessage('جواب غیرمنتظره از سرور دریافت شد', 'error');
+              }
+          })
+          .catch((error) => {
+              console.error('Error:', error);
+              showTemporaryMessage('اتصال به سرور موفقیت آمیز نبود!', 'error');
+          });
+      });
+  });
+
+  function showTemporaryMessage(message, type) {
+      const messageDiv = document.createElement('div');
+      messageDiv.textContent = message;
+      messageDiv.className = `temporary-message ${type}`;
+
+      // اضافه کردن استایل برای نمایش پیام در بالای صفحه
+      messageDiv.style.position = 'fixed';
+      messageDiv.style.top = '80px';
+      messageDiv.style.left = '50%';
+      messageDiv.style.width = 'auto';
+      messageDiv.style.height = 'auto';
+      messageDiv.style.zIndex = '1031';
+      messageDiv.style.text_align = 'center';
+
+      document.body.appendChild(messageDiv);
+
+      console.log("Message added to DOM:", messageDiv);
+
+      setTimeout(() => {
+          messageDiv.remove();
+          console.log("Message removed from DOM");
+      }, 3000);
+  }
+
+
+
+
+
+  const timePeriodSlider = document.getElementById('time-period');
+    const trafficSlider = document.getElementById('traffic');
+    const timePeriodInput = document.getElementById('time-period-input');
+    const trafficInput = document.getElementById('traffic-input');
+    const priceDisplay = document.getElementById('price');
+
+    // Pricing logic: Example price calculation
+    const basePricePerDay = 500
+    const basePricePerGB = 1500
+
+    function formatPrice(price) {
+      return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    function calculatePrice() {
+        const days = timePeriodSlider.value;
+        const gb = trafficSlider.value;
+        const price = (days * basePricePerDay) + (gb * basePricePerGB);
+        priceDisplay.textContent = formatPrice(price);
+    }
+
+    // Sync slider and input for time period
+    timePeriodSlider.addEventListener('input', () => {
+        timePeriodInput.value = timePeriodSlider.value;
+        calculatePrice();
     });
-});
 
-function showTemporaryMessage(message, type) {
-    const messageDiv = document.createElement('div');
-    messageDiv.textContent = message;
-    messageDiv.className = `temporary-message ${type}`;
+    timePeriodInput.addEventListener('input', () => {
+        timePeriodSlider.value = timePeriodInput.value;
+        calculatePrice();
+    });
 
-    // اضافه کردن استایل برای نمایش پیام در بالای صفحه
-    messageDiv.style.position = 'fixed';
-    messageDiv.style.top = '80px';
-    messageDiv.style.left = '50%';
-    messageDiv.style.width = 'auto';
-    messageDiv.style.height = 'auto';
-    messageDiv.style.zIndex = '1031';
-    messageDiv.style.text_align = 'center';
+    // Sync slider and input for traffic
+    trafficSlider.addEventListener('input', () => {
+        trafficInput.value = trafficSlider.value;
+        calculatePrice();
+    });
 
-    document.body.appendChild(messageDiv);
+    trafficInput.addEventListener('input', () => {
+        trafficSlider.value = trafficInput.value;
+        calculatePrice();
+    });
 
-    console.log("Message added to DOM:", messageDiv);
-
-    setTimeout(() => {
-        messageDiv.remove();
-        console.log("Message removed from DOM");
-    }, 3000);
-}
-
-
-
-
-
-const timePeriodSlider = document.getElementById('time-period');
-  const trafficSlider = document.getElementById('traffic');
-  const timePeriodInput = document.getElementById('time-period-input');
-  const trafficInput = document.getElementById('traffic-input');
-  const priceDisplay = document.getElementById('price');
-
-  // Pricing logic: Example price calculation
-  const basePricePerDay = 500
-  const basePricePerGB = 1500
-
-  function formatPrice(price) {
-    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  }
-
-  function calculatePrice() {
-      const days = timePeriodSlider.value;
-      const gb = trafficSlider.value;
-      const price = (days * basePricePerDay) + (gb * basePricePerGB);
-      priceDisplay.textContent = formatPrice(price);
-  }
-
-  // Sync slider and input for time period
-  timePeriodSlider.addEventListener('input', () => {
-      timePeriodInput.value = timePeriodSlider.value;
-      calculatePrice();
-  });
-
-  timePeriodInput.addEventListener('input', () => {
-      timePeriodSlider.value = timePeriodInput.value;
-      calculatePrice();
-  });
-
-  // Sync slider and input for traffic
-  trafficSlider.addEventListener('input', () => {
-      trafficInput.value = trafficSlider.value;
-      calculatePrice();
-  });
-
-  trafficInput.addEventListener('input', () => {
-      trafficSlider.value = trafficInput.value;
-      calculatePrice();
-  });
-
-  // Initial calculation
-  calculatePrice();
+    // Initial calculation
+    calculatePrice();
 </script>
 
 </body>

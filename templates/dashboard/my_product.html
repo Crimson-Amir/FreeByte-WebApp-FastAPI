@@ -1,10 +1,204 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fa" dir="rtl" xmlns="http://www.w3.org/1999/html">
 <head>
+
+
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{{ url_for('static', path='index/assets/css/theme.css') }}" rel="stylesheet" />
+    <link href="{{ url_for('static', path='index/my_custom_style.css') }}" rel="stylesheet" />
+
+    <title>داشبورد سرویس‌های VPN</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap');
+
+        body main {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: #291616;
+            color: #eaeaea;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .logout, .loggin, .signup, .feture-top, .buy-service-top, .guidance-top, .byte-logo, .free-logo, .user-name-button {
+            color: #b2b2b2 !important;
+        }
+
+
+        .dashboard {
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .service-card {
+            background-color: #3e2723;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
+            max-height: 140px;
+            transition: padding 0.5s ease, box-shadow 0.5s ease, transform 0.5s ease;
+        }
+
+        .service-card.expanded {
+            max-height: 300px;
+            padding: 20px;
+
+        }
+
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
+            transition: max-height 1s ease, transform 0.3s ease, box-shadow 0.5s ease, padding 0.5s ease;
+        }
+
+        .service-details {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .service-info {
+            flex: 1;
+        }
+
+        .service-info h3 {
+            margin: 0 0 10px;
+            font-size: 1.2rem;
+            color: #f5f5f5;
+        }
+
+        .service-info p {
+            margin: 5px 0;
+            color: #b2b2b2;
+        }
+
+        .progress-circle {
+            width: 100px;
+            height: 100px;
+            position: relative;
+        }
+
+        .progress-circle svg {
+            transform: rotate(-90deg);
+            transition: transform 1s ease;
+        }
+
+        .progress-circle .circle-bg {
+            fill: none;
+            stroke: #5d4037;
+            stroke-width: 10;
+        }
+
+        .progress-circle .circle {
+            fill: none;
+            stroke-width: 10;
+            stroke-linecap: round;
+            transition: stroke-dasharray 0.7s ease, stroke 0.7s ease;
+        }
+
+        .progress-circle .percentage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+
+        }
+
+        .actions {
+            text-align: center;
+            margin-top: 20px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .service-card.expanded .actions {
+            opacity: 1;
+        }
+
+        .actions button {
+            background-color: #d32f2f;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.3s ease;
+
+        }
+
+        .actions button:hover {
+            background-color: #b71c1c;
+
+        }
+    </style>
 </head>
 <body>
-    {{ message }}
+<main class="main" id="top">
+    {% include 'header/header.html' %}
+
+    <div class="dashboard">
+        <div class="service-card">
+            <div class="service-details">
+                <div class="service-info">
+                    <h3>سرویس VPN شماره 1</h3>
+                    <p>زمان باقی‌مانده: 15 روز</p>
+                    <p>حجم باقی‌مانده: 20 گیگابایت</p>
+                </div>
+                <div class="progress-circle">
+                    <svg width="100" height="100">
+                        <circle class="circle-bg" cx="50" cy="50" r="45"></circle>
+                        <circle class="circle" cx="50" cy="50" r="45" stroke="#ff6f61" stroke-dasharray="283" stroke-dashoffset="283"></circle>
+                    </svg>
+                    <div class="percentage">70%</div>
+                </div>
+            </div>
+            <div class="actions">
+
+                <button>تمدید</button>
+            </div>
+        </div>
+
+        <!-- کارت‌های دیگر سرویس‌ها به همین شکل اضافه می‌شوند -->
+    </div>
+
+    <script src="{{ url_for('static', path='index/assets/js/theme.js') }}"></script>
+    <script src="{{ url_for('static', path='index/vendors/bootstrap/bootstrap.min.js') }}"></script>
+
+    <script>
+        // محاسبه درصد و تنظیم offset برای دایره
+        function setProgress(element, percentage) {
+            const circle = element.querySelector('.circle');
+            const radius = circle.r.baseVal.value;
+            const circumference = 2 * Math.PI * radius;
+            const offset = circumference - (percentage / 100 * circumference);
+
+            // اضافه کردن انیمیشن به دایره
+            setTimeout(() => {
+                circle.style.strokeDashoffset = offset;
+                element.querySelector('.percentage').textContent = `${percentage}%`;
+            }, 500);
+        }
+
+        // تنظیم درصد برای نمونه سرویس
+        setProgress(document.querySelector('.progress-circle'), 70);
+
+        document.querySelectorAll('.service-card').forEach(card => {
+            card.addEventListener('click', () => {
+                card.classList.toggle('expanded');
+            });
+        });
+    </script>
+</main>
 </body>
 </html>

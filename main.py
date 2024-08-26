@@ -409,6 +409,7 @@ def create_new_service_for_user(service, database, ref_id, user_id):
 
     return create_config_db
 
+
 @app.get('/iran_recive_payment_result/')
 async def recive_payment_result(Authority: str, Status: str, request: Request, db: Session = Depends(get_db)):
 
@@ -462,3 +463,7 @@ async def recive_payment_result(Authority: str, Status: str, request: Request, d
             raise e
             return templates.TemplateResponse(request=request, name='dashboard/my_product.html', context={'message': message})
 
+
+@app.get('/dashboard/')
+async def dashboard(request: Request, db: Session = Depends(get_db)):
+    return templates.TemplateResponse(request=request, name='dashboard/my_product.html')
