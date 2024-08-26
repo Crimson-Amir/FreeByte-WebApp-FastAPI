@@ -20,7 +20,7 @@ def get_user_by_email(db: Session, email: str):
 def get_users(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.User).offset(skip).limit(limit).all()
 
-def add_credit_to_user(db, user_id: int, credit: int):
+def add_credit_to_user(db: Session, user_id: int, credit: int):
     add_credit = (
         update(models.User)
         .where(models.User.user_id == user_id)
@@ -33,7 +33,7 @@ def add_credit_to_user(db, user_id: int, credit: int):
     return result.scalar()
 
 def get_all_server(db: Session):
-    return db.query(models.Product).distinct.all()
+    return db.query(models.Product).distinct().all()
 
 def create_user(db: Session, user: schemas.UserCreate):
     hashed_password = hash_password_md5(user.password)
@@ -100,7 +100,7 @@ def get_product(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Product).offset(skip).limit(limit).all()
 
 def get_payment_detail_by_authority(db: Session, authority: str):
-    return db.query(models.IranPaymentGewayInvoice).filter(models.IranPaymentGewayInvoice.authority == authority)
+    return db.query(models.IranPaymentGewayInvoice).filter(models.IranPaymentGewayInvoice.authority == authority).first()
 
 def get_cart(db: Session, user_id: int):
     return db.query(models.Cart).filter(user_id == models.Cart.owner_id).first()

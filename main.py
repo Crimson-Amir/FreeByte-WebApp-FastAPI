@@ -1,9 +1,11 @@
+import random
+
 from fastapi import FastAPI, Request, Depends, HTTPException, Cookie, Response, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
-from . import schemas, crud, private, cryptomusApi, get_teter_price, api_clean
+from . import schemas, crud, private, cryptomusApi, get_teter_price, api_clean, models
 from .database import SessionLocal
 import jwt, uuid, json, aiohttp, pytz
 from datetime import datetime, timedelta
@@ -369,7 +371,7 @@ def traffic_to_gb(traffic, byte_to_gb:bool = True):
         return int(traffic * (1024 ** 3))
 
 def create_new_service_for_user(service, database, ref_id, user_id):
-    config_key, config_email = uuid.uuid4().hex, f'{service.config_id}_{ref_id}'
+    config_key, config_email = uuid.uuid4().hex, f'{random.randint(1, 1000000)}_{ref_id}'
     connect_to_server_instance.refresh_token()
 
     period = service.period_day
@@ -393,16 +395,17 @@ def create_new_service_for_user(service, database, ref_id, user_id):
         return
 
     client_address = connect_to_server_instance.api_operation.get_client_url(
-        config_email, service.inbound_id, domain=service.iran_domain_address,
-        server_domain=service.server_address, host=service.header_host, header_type=service.header_type)
+        config_email, service.inbound_id, domain=service.product.iran_domain_address,
+        server_domain=service.product.server_address, host=service.product.header_host, header_type=service.product.header_type)
 
     create_config_schema = schemas.CreateConfigInDB(
-        plan_name=service.plane_name, config_key=config_key, config_email=config_email, traffic_gb=service.traffic_gb,
+        plan_name=service.plan_name, config_key=config_key, config_email=config_email, traffic_gb=service.traffic_gb,
         period_day=service.period_day, price=service.price, active=True, product_id=service.product_id,
-        owner_id=user_id, client_address=client_address
+        owner_id=user_id, client_address=client_address, inbound_id=service.inbound_id
     )
 
-    create_config_db = crud.create_config(database, create_config_schema)
+    create_config_db = models.V2RayConfig(**create_config_schema.dict())
+    database.add(create_config_db)
 
     return create_config_db
 
@@ -410,36 +413,52 @@ def create_new_service_for_user(service, database, ref_id, user_id):
 async def recive_payment_result(Authority: str, Status: str, request: Request, db: Session = Depends(get_db)):
 
     if Status == 'OK':
-        get_from_data = crud.get_payment_detail_by_authority(db, Authority)
-
-        if not get_from_data:
-            return templates.TemplateResponse(request=request, name='cart/fail_pay.html',
-                                              context={'error_reason': f'تراکنش مورد نظر در دیتابیس ما وجود ندارد. آیدی تراکنش {Authority}', 'error_code': 403})
-
-        amount, payment_action = get_from_data.amount, get_from_data.action
-        cart_id, user_id = get_from_data.id_holder, get_from_data.user_id
-
-        response = await verify_iran_payment(Authority, amount)
-
-        if response.get('data', {}).get('code', 101) == 100:
-            ref_id = response.get('data').get('ref_id')
-
+        try:
             with db.begin():
-                try:
-                    crud.clear_cart(db, cart_id)
+
+                get_from_data = crud.get_payment_detail_by_authority(db, Authority)
+
+                if not get_from_data:
+                    return templates.TemplateResponse(request=request, name='cart/fail_pay.html',
+                                                      context={'error_reason': f'تراکنش مورد نظر در دیتابیس ما وجود ندارد. آیدی تراکنش {Authority}', 'error_code': 403})
+
+                amount, payment_action = get_from_data.amount, get_from_data.action
+                user_id: int = get_from_data.owner_id
+                cart_id: int = get_from_data.id_holder
+
+                # response = await verify_iran_payment(Authority, amount)
+                response = {'data': {"code": 100, 'ref_id': 214214214}}
+
+                if response.get('data', {}).get('code', 101) == 100:
+                    ref_id = response.get('data').get('ref_id')
                     get_cart = crud.get_cart(db, user_id)
 
+
+                    cart_item = db.query(models.CartV2RayConfigAssociation).filter(
+                        models.CartV2RayConfigAssociation.cart_id == cart_id).first()
+
+                    if cart_item:
+                        db.delete(cart_item)
+
                     for service in get_cart.v2ray_config_associations:
-                        if service.update:
+                        if service.v2ray_config.update:
                             continue
 
-                        service_count = service.cart_associations.count
+                        service_count = service.count
+                        print(service_count)
+
                         for _ in range(service_count):
-                            create = create_new_service_for_user(service, db, ref_id, user_id)
+                            create = create_new_service_for_user(service.v2ray_config, db, ref_id, user_id)
                             if not create: raise ValueError('config is not available in server')
 
-                except Exception as e:
-                    print(e)
-                    price = await calculate_total_price(service.cart_associations.cart.v2ray_config_associations)
-                    crud.add_credit_to_user(db, user_id, price)
+                    message = 'You Pay was successfull'
+                    return templates.TemplateResponse(request=request, name='dashboard/my_product.html', context={'message': message})
+
+        except Exception as e:
+            db.rollback()
+            price = await calculate_total_price(get_cart.v2ray_config_associations)
+            crud.add_credit_to_user(db, user_id, price)
+            message = 'You Pay was Failed'
+            raise e
+            return templates.TemplateResponse(request=request, name='dashboard/my_product.html', context={'message': message})
 

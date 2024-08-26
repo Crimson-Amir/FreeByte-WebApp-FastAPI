@@ -56,6 +56,7 @@ class CreateConfigInDB(BaseModel):
     plan_name: str
     config_key: str | None
     config_email: str | None
+    inbound_id: int
     traffic_gb: int
     period_day: int
     price: int

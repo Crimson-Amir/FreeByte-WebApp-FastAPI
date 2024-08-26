@@ -1,5 +1,6 @@
-import requests, crud, json
-from private import auth, telegram_bot_token, ADMIN_CHAT_IDs
+import requests, json
+from .private import auth, telegram_bot_token, ADMIN_CHAT_IDs
+from . import crud
 
 telegram_bot_url = f"https://api.telegram.org/bot{telegram_bot_token}/"
 
@@ -7,26 +8,25 @@ class XuiApiClean:
     server_details = {}
 
     def __init__(self, database):
-        super().__init__('v2ray')
         self.connect = requests.Session()
-        self.refresh_connecion()
         self.db = database
+        self.refresh_connecion()
 
     def refresh_connecion(self):
-        make_db = self.db()
-        get_domains = crud.get_all_server(make_db)
+        with next(self.db()) as db_session:
+            get_domains = crud.get_all_server(db_session)
 
-        for server in get_domains:
-            login = self.connect.post(f'{server.protocol}{server.server_address}:{server.server_port}/login', data=auth)
+            for server in get_domains:
+                login = self.connect.post(f'{server.protocol}{server.server_address}:{server.server_port}/login', data=auth)
 
-            self.server_details[server.server_address] = {
-                'cookie': login.cookies,
-                'protocol': server.protocol,
-                'server_port': server.server_port,
-            }
+                self.server_details[server.server_address] = {
+                    'cookie': login.cookies,
+                    'protocol': server.protocol,
+                    'server_port': server.server_port,
+                }
 
-            if login.status_code != 200:
-                print(f'Connection Problem. {login.status_code}')
+                if login.status_code != 200:
+                    print(f'Connection Problem. {login.status_code}')
 
     @staticmethod
     def send_telegram_message(message):
@@ -37,6 +37,7 @@ class XuiApiClean:
             cookie = self.server_details.get(domain, {}).get('cookie', {})
 
             with self.connect.request(method, url, json=json_data, cookies=cookie, timeout=5) as response:
+                print(response)
                 response.raise_for_status()
                 connection_response = response.json()
 
@@ -57,15 +58,16 @@ class XuiApiClean:
             raise e
 
     def get_all_inbounds(self):
-        make_db = self.db()
-        get_domains = crud.get_all_server(make_db)
-        all_inbound = [
-            self.make_request(
-                'get', f'{server.protocol}{server.server_address}:{server.server_port}/panel/api/inbounds/list',
-                domain=server.server_address
-            ) for server in get_domains
-        ]
-        return all_inbound
+        with next(self.db()) as db_session:
+            get_domains = crud.get_all_server(db_session)
+
+            all_inbound = [
+                self.make_request(
+                    'get', f'{server.protocol}{server.server_address}:{server.server_port}/panel/api/inbounds/list',
+                    domain=server.server_address
+                ) for server in get_domains
+            ]
+            return all_inbound
 
     def get_server_url(self, domain, endpoint):
         server_detail = self.server_details[domain]
