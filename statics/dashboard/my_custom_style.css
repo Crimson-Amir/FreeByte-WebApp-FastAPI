@@ -1,0 +1,162 @@
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap');
+
+        body main {
+            font-family: 'Vazirmatn';
+            background-color: #1a1f36;
+            color: #f1f1f1;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .logout, .loggin, .signup, .feture-top, .buy-service-top, .guidance-top, .byte-logo, .free-logo, .user-name-button {
+            font-family: 'Vazirmatn';
+            color: #c7c7c7 !important;
+
+        }
+
+        .dashboard {
+            max-width: 900px;
+            width: 100%;
+            padding-top: 70px;
+        }
+
+        .service-card, .without-plot {
+            background-color: #273c75;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
+            max-height: 140px;
+            transition: padding 0.5s ease, box-shadow 0.5s ease, transform 0.5s ease;
+        }
+
+        .service-card.expanded {
+            max-height: 300px;
+            padding: 20px;
+        }
+
+        .service-card:hover, .without-service:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
+            transition: max-height 1s ease, transform 0.3s ease, box-shadow 0.5s ease, padding 0.5s ease;
+        }
+
+        .service-details {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .service-info {
+            flex: 1;
+        }
+
+        .service-info h3 {
+            margin: 0 0 10px;
+            font-size: 1.2rem;
+            color: #f5f5f5;
+        }
+
+        .service-info p {
+            margin: 5px 0;
+            color: #d1d1d1;
+        }
+
+        .progress-circle {
+            width: 100px;
+            height: 100px;
+            position: relative;
+            transition: transform 0.7s ease; /* اضافه کردن انیمیشن به چرخش دایره */
+        }
+
+        .progress-circle svg {
+            transform: rotate(-90deg);
+            transition: transform 0.7s ease;
+        }
+
+        .service-card.expanded .progress-circle {
+            transform: rotate(0deg); /* چرخش به موقعیت اولیه در هنگام expand */
+        }
+
+        .progress-circle .circle-bg {
+            fill: none;
+            stroke: #34495e;
+            stroke-width: 10;
+        }
+
+        .progress-circle .circle {
+            fill: none;
+            stroke-width: 10;
+            stroke-linecap: round;
+            stroke-dasharray: 283;
+            stroke-dashoffset: 283;
+            stroke: #ffab40;
+            transition: stroke-dasharray 0.7s ease, stroke 0.7s ease;
+        }
+
+        .progress-circle .percentage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .service-card.expanded .actions {
+            opacity: 1;
+        }
+
+        .actions input, .actions button, .actions a, .view_service_detail {
+            background-color: #f39c12;
+            font-family: 'Vazirmatn', sans-serif;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        .actions input:hover, .actions button:hover {
+            background-color: #e67e22;
+        }
+
+        .navbar {
+            background-color: rgb(26, 31, 54) !important;
+        }
+
+        .widt-175px {
+            width: 175px;
+        }
+
+        .without-service {
+            display: flex;
+            background-color: #273c75;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            overflow: hidden;
+            max-height: 140px;
+            transition: padding 0.5s ease, box-shadow 0.5s ease, transform 0.5s ease;
+            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+}
