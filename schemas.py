@@ -49,6 +49,10 @@ class ClientConfigBase(BaseModel):
 class ClientConfigReq(ClientConfigBase):
     pass
 
+class ClientConfigReqCustom(BaseModel):
+    traffic: int
+    period: int
+
 class ClientConfigID(BaseModel):
     config_id: int
 

@@ -536,3 +536,36 @@ async def add_service_to_cart_for_renew(data: schemas.add_service_to_cart_for_re
     except Exception as e:
         print(e)
         return {'status': 'error', 'reason': str(e)}
+
+
+@app.post('/add_custom_service_to_cart/')
+async def add_custom_service_to_cart(config: schemas.ClientConfigReqCustom, request: Request, db: Session = Depends(get_db)):
+    try:
+        price_per_gb, price_per_day = 1500, 500
+        custom_service_inbound_id, custom_service_product_id = 1, 1
+        calcuate_price = (price_per_gb * config.traffic) + (price_per_day * config.period)
+        user_id = jwt.decode(request.cookies.get("access_token"), SECRET_KEY, algorithms=["HS256"]).get('user_id')
+        cart_id = crud.get_cart(db, user_id)
+        check_same_config = crud.does_same_config_available_in_cart(db, config.period, config.traffic)
+
+        if not check_same_config:
+
+            create_config_schema = schemas.CreateConfigInDB(
+                plan_name='دلخواه', config_key=None, config_email=None, traffic_gb=config.traffic,
+                period_day=config.period, price=calcuate_price, active=False, product_id=custom_service_product_id,
+                owner_id=user_id, client_address=None, inbound_id=custom_service_inbound_id
+            )
+            service = crud.create_config(db, create_config_schema)
+            crud.add_to_cart(db, cart_id.cart_id, service.config_id)
+
+        else:
+            check_in_cart = crud.is_config_available_in_cart(db, cart_id.cart_id, check_same_config.config_id)
+            if check_in_cart:
+                crud.add_config_count_in_cart(db, cart_id.cart_id, check_same_config.config_id)
+            else:
+                crud.add_to_cart(db, cart_id.cart_id, check_same_config.config_id)
+
+        return {'status': 'ok'}
+    except Exception as e:
+        print(e)
+        return {'status': 'error', 'reason': str(e)}

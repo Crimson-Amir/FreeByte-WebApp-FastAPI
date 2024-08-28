@@ -134,7 +134,12 @@ def is_config_available_in_cart(db: Session, cart_id: int, config_id: int):
             .filter(models.CartV2RayConfigAssociation.cart_id == cart_id)
             .filter(models.CartV2RayConfigAssociation.config_id == config_id)
             .first())
-
+def does_same_config_available_in_cart(db: Session, period: int, traffic: int):
+    return (db.query(models.V2RayConfig)
+            .filter(models.V2RayConfig.traffic_gb == traffic)
+            .filter(models.V2RayConfig.period_day == period)
+            .filter(models.V2RayConfig.active == False)
+            .first())
 
 def create_product(db: Session, item: schemas.ProductCreate):
     db_item = models.Product(**item.dict())
