@@ -1,204 +1,223 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl" xmlns="http://www.w3.org/1999/html">
 <head>
-
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="{{ url_for('static', path='index/assets/css/theme.css') }}" rel="stylesheet" />
-    <link href="{{ url_for('static', path='index/my_custom_style.css') }}" rel="stylesheet" />
+    <link href="{{ url_for('static', path='dashboard/my_custom_style.css') }}" rel="stylesheet" />
 
     <title>داشبورد سرویس‌های VPN</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap');
 
-        body main {
-            font-family: 'Vazirmatn', sans-serif;
-            background-color: #291616;
-            color: #eaeaea;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .logout, .loggin, .signup, .feture-top, .buy-service-top, .guidance-top, .byte-logo, .free-logo, .user-name-button {
-            color: #b2b2b2 !important;
-        }
-
-
-        .dashboard {
-            max-width: 900px;
-            width: 100%;
-        }
-
-        .service-card {
-            background-color: #3e2723;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            cursor: pointer;
-            overflow: hidden;
-            position: relative;
-            max-height: 140px;
-            transition: padding 0.5s ease, box-shadow 0.5s ease, transform 0.5s ease;
-        }
-
-        .service-card.expanded {
-            max-height: 300px;
-            padding: 20px;
-
-        }
-
-        .service-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
-            transition: max-height 1s ease, transform 0.3s ease, box-shadow 0.5s ease, padding 0.5s ease;
-        }
-
-        .service-details {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .service-info {
-            flex: 1;
-        }
-
-        .service-info h3 {
-            margin: 0 0 10px;
-            font-size: 1.2rem;
-            color: #f5f5f5;
-        }
-
-        .service-info p {
-            margin: 5px 0;
-            color: #b2b2b2;
-        }
-
-        .progress-circle {
-            width: 100px;
-            height: 100px;
-            position: relative;
-        }
-
-        .progress-circle svg {
-            transform: rotate(-90deg);
-            transition: transform 1s ease;
-        }
-
-        .progress-circle .circle-bg {
-            fill: none;
-            stroke: #5d4037;
-            stroke-width: 10;
-        }
-
-        .progress-circle .circle {
-            fill: none;
-            stroke-width: 10;
-            stroke-linecap: round;
-            transition: stroke-dasharray 0.7s ease, stroke 0.7s ease;
-        }
-
-        .progress-circle .percentage {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 18px;
-            font-weight: bold;
-            color: #fff;
-
-        }
-
-        .actions {
-            text-align: center;
-            margin-top: 20px;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
-
-        .service-card.expanded .actions {
-            opacity: 1;
-        }
-
-        .actions button {
-            background-color: #d32f2f;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: background-color 0.3s ease;
-
-        }
-
-        .actions button:hover {
-            background-color: #b71c1c;
-
-        }
-    </style>
 </head>
 <body>
 <main class="main" id="top">
     {% include 'header/header.html' %}
 
     <div class="dashboard">
-        <div class="service-card">
+
+        {% if all_services %}
+        {% for service in all_services %}
+
+
+        {% if service_detail_from_server[service.config_email] %}
+        <div class="service-card" data-percentage="{{ service_detail_from_server[service.config_email]['usage_percent'] }}">
             <div class="service-details">
                 <div class="service-info">
-                    <h3>سرویس VPN شماره 1</h3>
-                    <p>زمان باقی‌مانده: 15 روز</p>
-                    <p>حجم باقی‌مانده: 20 گیگابایت</p>
+                    <h3 style="{% if not service_detail_from_server[service.config_email]['enable'] %} color: red; {% endif %}">سرویس {{service.plan_name}} شماره {{service.config_id}}</h3>
+                    <p>زمان باقی‌مانده: {{ service_detail_from_server[service.config_email]['left_day'] }} روز</p>
+                    <p>حجم باقی‌مانده: {{ service_detail_from_server[service.config_email]['left_traffic'] }} گیگابایت</p>
                 </div>
+
                 <div class="progress-circle">
                     <svg width="100" height="100">
                         <circle class="circle-bg" cx="50" cy="50" r="45"></circle>
-                        <circle class="circle" cx="50" cy="50" r="45" stroke="#ff6f61" stroke-dasharray="283" stroke-dashoffset="283"></circle>
+                        <circle class="circle" cx="50" cy="50" r="45"></circle>
                     </svg>
                     <div class="percentage">70%</div>
                 </div>
+                {% else %}
+                <div class="service-card">
+                    <div class="service-details">
+                        <div class="service-info">
+                            <h3 style="{% if not service.service_status %} color: red; {% endif %}">سرویس {{service.plan_name}} شماره {{service.config_id}}</h3>
+                            <p>دوره زمانی: {{service.period_day}} روز</p>
+                            <p>ترافیک سرویس: {{service.traffic_gb}} گیگابایت</p>
+
+                        </div>
+
+                        <a href="/dashboard/service_detail_2" class="view_service_detail">مشاهده جزئیات سرویس</a>
+                        {% endif %}
+
+                    </div>
+                    <div class="actions">
+
+                        <input type="text" id="hiddenConfigAddress" value="{{ service.client_address }}" style="position: absolute; left: -9999px;">
+                        <button class="widt-175px" style="margin-left: 10px;" onclick="copyToClipboard()">دریافت لینک سرویس</button>
+
+                        <form class="renew_service">
+                            <input type="hidden" class="config_id-input" value="{{ service.config_id }}">
+                            <input type="submit" class="widt-175px" style="margin-left: 10px;" value="تمدید سرویس">
+                        </form>
+
+                        <form class="remove_service">
+                            <input type="hidden" class="config_id-input" value="{{ service.config_id }}">
+                            <input type="submit" class="widt-175px" style="margin-left: 10px;" value="حذف سرویس">
+                        </form>
+                    </div>
+                </div>
+
+                {% endfor %}
+
+
+                {% else %}
+
+                <div class="without-service">
+                    هیچ سرویسی برای شما ثبت نشده، درصورت تمایل یک سرویس تهیه کنید:
+                    <div class="actions" style="opacity: 100%;">
+                        <a href="/home/#buy-plane" style="margin-left: 10px;">خرید سرویس</a>
+                        <a href="/home/#upgrade-serivice">تمدید سرویس فعلی</a>
+                    </div>
+
+                </div>
+
+                {% endif %}
             </div>
-            <div class="actions">
 
-                <button>تمدید</button>
-            </div>
-        </div>
+            <script src="{{ url_for('static', path='index/assets/js/theme.js') }}"></script>
+            <script src="{{ url_for('static', path='index/vendors/bootstrap/bootstrap.min.js') }}"></script>
 
-        <!-- کارت‌های دیگر سرویس‌ها به همین شکل اضافه می‌شوند -->
-    </div>
+            <script>
+                function setProgress(element, percentage) {
+                    const circle = element.querySelector('.circle');
+                    const radius = circle.r.baseVal.value;
+                    const circumference = 2 * Math.PI * radius;
+                    const offset = circumference - (percentage / 100 * circumference);
 
-    <script src="{{ url_for('static', path='index/assets/js/theme.js') }}"></script>
-    <script src="{{ url_for('static', path='index/vendors/bootstrap/bootstrap.min.js') }}"></script>
+                    // اضافه کردن انیمیشن به دایره
+                    setTimeout(() => {
+                        circle.style.strokeDashoffset = offset;
+                        element.querySelector('.percentage').textContent = `${percentage}%`;
+                    }, 500);
+                }
 
-    <script>
-        // محاسبه درصد و تنظیم offset برای دایره
-        function setProgress(element, percentage) {
-            const circle = element.querySelector('.circle');
-            const radius = circle.r.baseVal.value;
-            const circumference = 2 * Math.PI * radius;
-            const offset = circumference - (percentage / 100 * circumference);
+                // تنظیم درصد برای همه سرویس‌ها
+                document.querySelectorAll('.service-card').forEach(card => {
+                    const percentage = card.getAttribute('data-percentage');
+                    setProgress(card.querySelector('.progress-circle'), percentage);
 
-            // اضافه کردن انیمیشن به دایره
-            setTimeout(() => {
-                circle.style.strokeDashoffset = offset;
-                element.querySelector('.percentage').textContent = `${percentage}%`;
-            }, 500);
+                    card.addEventListener('click', () => {
+                        card.classList.toggle('expanded');
+                    });
+                });
+
+                function copyToClipboard() {
+                var copyText = document.getElementById("hiddenConfigAddress");
+                copyText.select();
+                copyText.setSelectionRange(0, 99999);
+
+                document.execCommand("copy");
+
+                alert("آدرس سرویس در کلیپ بورد شما کپی شد: ");
         }
 
-        // تنظیم درصد برای نمونه سرویس
-        setProgress(document.querySelector('.progress-circle'), 70);
+        document.querySelectorAll('.remove_service').forEach(form => {
+            form.addEventListener('submit', event => {
+                event.preventDefault();
 
-        document.querySelectorAll('.service-card').forEach(card => {
-            card.addEventListener('click', () => {
-                card.classList.toggle('expanded');
+                const userConfirmed = confirm('آیا مطمئن هستید که می‌خواهید این سرویس را حذف کنید؟');
+                if (!userConfirmed) {
+                    return;
+                }
+
+                const configId = form.querySelector('.config_id-input').value;
+
+                fetch(`/remove-user-service/${configId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'ok') {
+                        form.closest('.service-card').remove();
+                        showTemporaryMessage('سرویس با موفقیت حذف شد', 'success');
+                    } else {
+                        showTemporaryMessage('مشکلی در ثبت درخواست وجود داشت!', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showTemporaryMessage('اتصال به سرور موفقیت‌آمیز نبود!', 'error');
+                });
             });
         });
-    </script>
+
+
+        document.querySelectorAll('.renew_service').forEach(form => {
+            form.addEventListener('submit', event => {
+                event.preventDefault();
+
+                const configId = form.querySelector('.config_id-input').value;
+
+                fetch(`/add-service-to-cart-for-renew`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ config_id: configId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'ok') {
+                        showTemporaryMessage('تمدید سرویس با موفقیت به سبدخرید اضافه شد', 'success');
+                    }
+                     else if (data.status === 'nok') {
+                        showTemporaryMessage('سفارش تمدید این سرویس از قبل در سبد خرید شما وجود دارد', 'error');
+                    }
+                     else {
+                        showTemporaryMessage('مشکلی در ثبت درخواست وجود داشت!', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showTemporaryMessage('اتصال به سرور موفقیت‌آمیز نبود!', 'error');
+                });
+            });
+        });
+
+
+        function showTemporaryMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.textContent = message;
+            messageDiv.className = `temporary-message ${type}`;
+
+            messageDiv.style.position = 'fixed';
+            messageDiv.style.top = '80px';
+            messageDiv.style.left = '50%';
+            messageDiv.style.transform = 'translateX(-50%)';
+            messageDiv.style.zIndex = '1031';
+            messageDiv.style.padding = '15px 30px';
+            messageDiv.style.color = 'white';
+            messageDiv.style.backgroundColor = type === 'success' ? 'green' : 'red';
+            messageDiv.style.borderRadius = '8px';
+            messageDiv.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
+            messageDiv.style.fontSize = '16px';
+            messageDiv.style.textAlign = 'center';
+            messageDiv.style.whiteSpace = 'nowrap';
+            messageDiv.style.pointerEvents = 'none';
+
+            document.body.appendChild(messageDiv);
+            console.log("Message added to DOM:", messageDiv);
+
+            setTimeout(() => {
+                messageDiv.remove();
+                console.log("Message removed from DOM");
+            }, 3000);
+        }
+
+
+            </script>
 </main>
 </body>
 </html>

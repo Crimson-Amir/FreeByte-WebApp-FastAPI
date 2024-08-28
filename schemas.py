@@ -63,7 +63,7 @@ class CreateConfigInDB(BaseModel):
     active: float = False
     product_id: int
     owner_id: int | None
-    update: bool | None = None
+    update: bool | None = False
     client_address: str | None = None
 
 class ClientConfig(ClientConfigBase):
@@ -98,3 +98,6 @@ class CreateCryptomusInvoiceBeforPay(BaseModel):
     is_refresh: bool
     is_final: bool = False
     owner_id: int
+
+class add_service_to_cart_for_renew(BaseModel):
+    config_id: int

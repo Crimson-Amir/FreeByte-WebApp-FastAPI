@@ -72,15 +72,33 @@
             <div>
                 <div class="row border-top border-bottom" style="margin-right: 0;">
                     <div class="row main align-items-center" style="margin-right: 0;">
-                        <div class="col" style="padding-right: 20px; max-width: 15%;">
-                            <div class="row text-muted">پکیج VPN</div>
+                        {% if config.v2ray_config.update %}
+
+                        <div class="col" style="padding-right: 20px; max-width: 16%;">
+                            <div class="row text-muted">
+                                تمدید سرویس
+                            </div>
+                            <div class="row">شماره {{ config.v2ray_config.config_email }}</div>
+                        </div>
+
+                        <div class="col" style="max-width: 23%;">
+                        </div>
+
+                        {% else %}
+
+                        <div class="col" style="padding-right: 20px; max-width: 16%;">
+                            <div class="row text-muted">
+                                خرید سرویس
+                            </div>
                             <div class="row">پلن {{ config.v2ray_config.plan_name }}</div>
                         </div>
+
                         <div class="col" style="max-width: 23%;">
                             <a href="#" class="increment" data-config-id="{{ config.v2ray_config.config_id }}" data-cart-id="{{ db_cart.cart_id }}">+</a>
                             <a href="#" class="border" id="count-{{ config.v2ray_config.config_id }}">{{ config.count }}</a>
                             <a href="#" class="decrement" data-config-id="{{ config.v2ray_config.config_id }}" data-cart-id="{{ db_cart.cart_id }}">-</a>
                         </div>
+                        {% endif %}
 
                         <div class="col" style="max-width: 28%;">
                             <div class="row">مدت زمان: {{ config.v2ray_config.period_day }} روز</div>
@@ -240,7 +258,7 @@ document.querySelectorAll('.buy-service-form').forEach(form => {
         .then(data => {
             if (data.status === 'ok') {
                 form.closest('.row').remove();
-                showTemporaryMessage('کانفیگ با موفقیت حذف شد', 'success');
+                showTemporaryMessage('سرویس با موفقیت حذف شد', 'success');
                 const ItemHolder = document.querySelector('.item_holder');
                 ItemHolder.textContent = `${data.new_item_count} آیتم`;
                 const totalPriceElement = document.querySelector('.summary .summary_price');
@@ -257,7 +275,6 @@ document.querySelectorAll('.buy-service-form').forEach(form => {
 });
 
 
-
 function showTemporaryMessage(message, type) {
     const messageDiv = document.createElement('div');
     messageDiv.textContent = message;
@@ -266,12 +283,19 @@ function showTemporaryMessage(message, type) {
     messageDiv.style.position = 'fixed';
     messageDiv.style.top = '80px';
     messageDiv.style.left = '50%';
-    messageDiv.style.width = 'auto';
-    messageDiv.style.height = 'auto';
+    messageDiv.style.transform = 'translateX(-50%)';
     messageDiv.style.zIndex = '1031';
+    messageDiv.style.padding = '15px 30px';
+    messageDiv.style.color = 'white';
+    messageDiv.style.backgroundColor = type === 'success' ? 'green' : 'red';
+    messageDiv.style.borderRadius = '8px';
+    messageDiv.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
+    messageDiv.style.fontSize = '16px';
+    messageDiv.style.textAlign = 'center';
+    messageDiv.style.whiteSpace = 'nowrap';
+    messageDiv.style.pointerEvents = 'none';
 
     document.body.appendChild(messageDiv);
-
     console.log("Message added to DOM:", messageDiv);
 
     setTimeout(() => {

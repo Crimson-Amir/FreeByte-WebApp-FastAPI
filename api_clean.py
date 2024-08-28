@@ -33,10 +33,11 @@ class XuiApiClean:
         requests.post(f'{telegram_bot_url}/sendMessage', data={'chat_id': ADMIN_CHAT_IDs[0], "text": message})
 
     def make_request(self, method, url, domain, json_data=None):
-        try:
-            cookie = self.server_details.get(domain, {}).get('cookie', {})
+        cookie = self.server_details.get(domain, {}).get('cookie', {})
+        print(cookie)
+        with self.connect.request(method, url, json=json_data, cookies=cookie, timeout=5) as response:
+            try:
 
-            with self.connect.request(method, url, json=json_data, cookies=cookie, timeout=5) as response:
                 print(response)
                 response.raise_for_status()
                 connection_response = response.json()
@@ -51,11 +52,13 @@ class XuiApiClean:
                     raise ConnectionError(text)
 
                 return connection_response
+            except Exception as e:
+                print(response)
+                # text = f'🔴 Connection problem in Xui Api [WEB APP]\ncode: {response.status_code}\nurl: {response.url}'
+                # self.send_telegram_message(text)
+                # raise e
 
-        except Exception as e:
-            text = f'🔴 Connection problem in Xui Api [WEB APP]\ncode: {response.status_code}\nurl: {response.url}'
-            self.send_telegram_message(text)
-            raise e
+
 
     def get_all_inbounds(self):
         with next(self.db()) as db_session:

@@ -49,7 +49,7 @@ class Cart(Base):
     owner_id = Column(Integer, ForeignKey('UserDetail.user_id'))
     owner = relationship("User", back_populates="cart")
 
-    v2ray_config_associations = relationship("CartV2RayConfigAssociation", back_populates="cart")
+    v2ray_config_associations = relationship("CartV2RayConfigAssociation", back_populates="cart", cascade="all, delete-orphan")
 
 class V2RayConfig(Base):
     __tablename__ = 'v2ray_config'
@@ -63,6 +63,7 @@ class V2RayConfig(Base):
     period_day = Column(Integer)
     price = Column(Integer)
     active = Column(Boolean, default=True)
+    service_status = Column(Boolean, default=True)
 
     update = Column(Boolean, default=False)
     client_address = Column(String, nullable=True)
@@ -75,12 +76,12 @@ class V2RayConfig(Base):
     owner_id = Column(Integer, ForeignKey('UserDetail.user_id'), nullable=True)
     owner = relationship("User", back_populates="config")
 
-    cart_associations = relationship("CartV2RayConfigAssociation", back_populates="v2ray_config")
+    cart_associations = relationship("CartV2RayConfigAssociation", back_populates="v2ray_config", cascade="all, delete-orphan")
 
 class CartV2RayConfigAssociation(Base):
     __tablename__ = 'cart_v2ray_config_association'
     cart_id = Column(Integer, ForeignKey('Cart.cart_id'), primary_key=True)
-    config_id = Column(Integer, ForeignKey('v2ray_config.config_id'), primary_key=True)
+    config_id = Column(Integer, ForeignKey('v2ray_config.config_id', ondelete='CASCADE'), primary_key=True)
     count = Column(Integer, default=1)
 
     cart = relationship("Cart", back_populates="v2ray_config_associations")
