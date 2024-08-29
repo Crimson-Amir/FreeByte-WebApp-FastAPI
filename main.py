@@ -5,11 +5,12 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from . import schemas, crud, private, cryptomusApi, get_teter_price, api_clean, models
 from .database import SessionLocal
-import jwt, uuid, json, aiohttp, pytz, random, string
+import jwt, uuid, json, aiohttp, pytz, random, string, requests
 from datetime import datetime, timedelta
 from.auth import SECRET_KEY, REFRESH_SECRET_KEY, create_access_token, create_refresh_token
 from .zarinPalAPI import SendInformation, InformationData
 from urllib.parse import urlparse, parse_qs
+from .private import ADMIN_CHAT_IDs, telegram_bot_token
 
 verification_codes = {}
 price_per_gb, price_per_day = 1500, 500
@@ -386,7 +387,14 @@ def generate_random_string(length=5):
     return random_string
 
 async def report_status_to_admin(text , user_id):
-    pass
+    try:
+        text = (f'{text}'
+                f'\nUser Chat ID: {user_id}')
+
+        telegram_bot_url = f"https://api.telegram.org/bot{telegram_bot_token}/sendMessage"
+        requests.post(telegram_bot_url, data={'chat_id': ADMIN_CHAT_IDs[0], 'text': text})
+    except Exception as e:
+        print(f'Failed to send message to ADMIN {e}')
 
 async def upgrade_service_in_server(service, database, user_id):
     connect_to_server_instance.refresh_token()
@@ -537,13 +545,22 @@ async def recive_payment_result(Authority: str, Status: str, request: Request, d
                             create = await create_new_service_for_user(service.v2ray_config, db, user_id)
                             if not create: raise ValueError('config is not available in server')
 
-                    return RedirectResponse('/dashboard/')
+                    return RedirectResponse('/dashboard/?payment_status=1')
 
         except Exception as e:
             db.rollback()
             price = await calculate_total_price(get_cart.v2ray_config_associations)
             crud.add_credit_to_user(db, user_id, price)
-            return RedirectResponse('/dashboard/')
+            await report_status_to_admin(
+                text=f'🕸️ User Service Buy Faild And Return Credit To wallet [WEB APP]'
+                     f'\nService ID: {service.config_id}'
+                     f'\nService Name: {service.plan_name}'
+                     f'\nTraffic: {service.traffic_gb}GB'
+                     f'\nPeriod: {service.period_day}day'
+                     f'\nAmount: {service.price:,}'
+                     f'\nError: {type(e)}\n{str(e)}',
+                user_id=user_id)
+            return RedirectResponse('/dashboard/?payment_status=2')
 
 
 async def get_server_details(all_services):
@@ -561,19 +578,22 @@ async def get_server_details(all_services):
                 final_result[obj.get('email')] = obj
                 final_result[obj.get('email')]['usage_percent'] = int(((obj.get('up', 0) + obj.get('down', 0)) / obj.get('total', 1)) * 100)
                 final_result[obj.get('email')]['left_day'] = max((second_to_ms(obj.get('expiryTime'), False) - datetime.now(pytz.timezone('Asia/Tehran')).replace(tzinfo=None)).days, 0)
-                final_result[obj.get('email')]['left_traffic'] = traffic_to_gb(obj.get('total', 0) - (obj.get('up', 0) + obj.get('down', 1)), True)
+                final_result[obj.get('email')]['left_traffic'] = round(traffic_to_gb(obj.get('total', 0) - (obj.get('up', 0) + obj.get('down', 1)), True), 2)
 
 
         return final_result
 
 @app.get('/dashboard/')
-async def dashboard(request: Request, db: Session = Depends(get_db)):
+async def dashboard(request: Request, payment_status: int = None, db: Session = Depends(get_db)):
     user_id = await decode_access_token(request)
     all_services = crud.get_user_configs(db, user_id)
+    all_data = await decode_access_token(request, True)
 
     return templates.TemplateResponse(request=request, name='dashboard/my_product.html', context={
+        'user_data': all_data,
         'all_services': all_services,
-        'service_detail_from_server': await get_server_details(all_services)
+        'service_detail_from_server': await get_server_details(all_services),
+        'payment_status': payment_status
     })
 
 async def remove_service_from_db(service):

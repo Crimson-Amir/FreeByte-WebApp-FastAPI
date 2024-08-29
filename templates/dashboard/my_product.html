@@ -15,6 +15,19 @@
 
     <div class="dashboard">
 
+        {% if payment_status %}
+        {% if payment_status == 1 %}
+        <div style="background-color: green;padding: 7px 10px;border-radius: 10px;margin-bottom:20px;text-align: center;">
+            پرداخت شما موفقیت آمیز بود!
+        </div>
+        {% else %}
+        <div style="background-color: red;padding: 7px 10px;border-radius: 10px;margin-bottom:20px;text-align: center;">
+            در هنگام اجرای عملیات مشکلی رخ داد و مبلغ سفارش به کیف پول شما بازگشت!
+        </div>
+        {% endif %}
+        {% endif %}
+
+
         {% if all_services %}
         {% for service in all_services %}
 
