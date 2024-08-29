@@ -88,7 +88,7 @@
                     هیچ سرویسی برای شما ثبت نشده، درصورت تمایل یک سرویس تهیه کنید:
                     <div class="actions" style="opacity: 100%;">
                         <a href="/home/#buy-plane" style="margin-left: 10px;">خرید سرویس</a>
-                        <a href="/home/#upgrade-serivice">تمدید سرویس فعلی</a>
+                        <a href="/home/#custom-and-upgrade">تمدید سرویس فعلی</a>
                     </div>
 
                 </div>
@@ -229,6 +229,24 @@
             }, 3000);
         }
 
+document.getElementById("dropdownMenuButton").addEventListener("click", function(event) {
+    event.preventDefault();
+    var dropdownMenu = document.getElementById("dropdownMenu");
+    dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
+});
+
+// بستن منو اگر در جای دیگری کلیک شد
+window.addEventListener("click", function(event) {
+    if (!event.target.matches('.user-name-button')) {
+        var dropdowns = document.getElementsByClassName("dropdown-menu");
+        for (var i = 0; i < dropdowns.length; i++) {
+            var openDropdown = dropdowns[i];
+            if (openDropdown.style.display === "block") {
+                openDropdown.style.display = "none";
+            }
+        }
+    }
+});
 
             </script>
 </main>

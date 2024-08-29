@@ -134,7 +134,10 @@ def get_cart(db: Session, user_id: int):
     return db.query(models.Cart).filter(user_id == models.Cart.owner_id).first()
 
 def get_user_configs(db: Session, user_id: int):
-    return db.query(models.V2RayConfig).filter(user_id == models.V2RayConfig.owner_id).all()
+    return (db.query(models.V2RayConfig)
+            .filter(user_id == models.V2RayConfig.owner_id)
+            .filter(models.V2RayConfig.active == True)
+            .all())
 
 def clear_cart(db: Session, cart_id: int):
     clear_cart_db = delete(models.CartV2RayConfigAssociation).where(models.CartV2RayConfigAssociation.cart_id == cart_id)

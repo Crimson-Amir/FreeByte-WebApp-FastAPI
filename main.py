@@ -568,6 +568,7 @@ async def get_server_details(all_services):
         final_result = dict()
         connect_to_server_instance.refresh_token()
         for service in all_services:
+            print(service.config_email)
             get_service_detail = connect_to_server_instance.api_operation.get_client(
                 service.config_email,
                 service.product.server_address
@@ -575,6 +576,7 @@ async def get_server_details(all_services):
 
             if get_service_detail.get('success', False):
                 obj = get_service_detail.get('obj', {})
+                print(get_service_detail)
                 final_result[obj.get('email')] = obj
                 final_result[obj.get('email')]['usage_percent'] = int(((obj.get('up', 0) + obj.get('down', 0)) / obj.get('total', 1)) * 100)
                 final_result[obj.get('email')]['left_day'] = max((second_to_ms(obj.get('expiryTime'), False) - datetime.now(pytz.timezone('Asia/Tehran')).replace(tzinfo=None)).days, 0)
@@ -587,6 +589,7 @@ async def get_server_details(all_services):
 async def dashboard(request: Request, payment_status: int = None, db: Session = Depends(get_db)):
     user_id = await decode_access_token(request)
     all_services = crud.get_user_configs(db, user_id)
+    print(user_id)
     all_data = await decode_access_token(request, True)
 
     return templates.TemplateResponse(request=request, name='dashboard/my_product.html', context={

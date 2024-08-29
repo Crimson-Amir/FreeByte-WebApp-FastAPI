@@ -38,7 +38,7 @@
   <!-- <section> begin ============================-->
   <section class="pb-6">
 
-    <div class="container">
+    <div class="container" id="about-us">
       <div class="row flex-center">
         <div class="col-lg-6 col-md-5 order-md-1"><img class="img-fluid" src="{{ url_for('static', path='index/assets/img/illustrations/1.png') }}" alt="" /></div>
         <div class="col-md-7 col-lg-6 mt-5 text-center text-md-end">
@@ -216,7 +216,7 @@
 
   <div class="grey-back">
     <div class="container">
-      <div class="row justify-content-center">
+      <div class="row justify-content-center" id="custom-and-upgrade">
 
         <!-- فرم خرید سرویس -->
         <div class="col-12 col-md-6 col-lg-5 my-4">
@@ -378,7 +378,7 @@
   <!-- <section> begin ============================-->
   <section class="bg-200 pt-9 pb-0">
 
-    <div class="container">
+    <div class="container" id="foot">
       <div class="row">
         <div class="col-12 col-lg-4 mb-3"><a href="#"><img class="d-inline-block align-middle" src="{{ url_for('static', path='index/assets/img/icons/logo.png') }}" alt="" width="30" /><span class="d-inline-block text-1000 fs-1 ms-2 fw-medium lh-base">Free<span class="fw-bold" style="margin-right: 5px;">Byte</span></span></a>
           <p class="my-3 vazir_regular"> <span class="fw-bold">فری‌بایت </span>یک شبکه مجازی خصوصی شبکه است<br />که ویژگی های قابل توجه و امنیت بالایی دارد. </p>
@@ -665,6 +665,25 @@
     updateBuyServicePrice();
     updateManualPrice();
     updateServicePrice();
+});
+
+  document.getElementById("dropdownMenuButton").addEventListener("click", function(event) {
+    event.preventDefault();
+    var dropdownMenu = document.getElementById("dropdownMenu");
+    dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
+});
+
+// بستن منو اگر در جای دیگری کلیک شد
+window.addEventListener("click", function(event) {
+    if (!event.target.matches('.user-name-button')) {
+        var dropdowns = document.getElementsByClassName("dropdown-menu");
+        for (var i = 0; i < dropdowns.length; i++) {
+            var openDropdown = dropdowns[i];
+            if (openDropdown.style.display === "block") {
+                openDropdown.style.display = "none";
+            }
+        }
+    }
 });
 
 </script>
