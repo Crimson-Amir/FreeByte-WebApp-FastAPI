@@ -9,8 +9,11 @@ import jwt, uuid, json, aiohttp, pytz, random, string
 from datetime import datetime, timedelta
 from.auth import SECRET_KEY, REFRESH_SECRET_KEY, create_access_token, create_refresh_token
 from .zarinPalAPI import SendInformation, InformationData
+from urllib.parse import urlparse, parse_qs
 
 verification_codes = {}
+price_per_gb, price_per_day = 1500, 500
+
 
 def get_db():
     db = SessionLocal()
@@ -73,7 +76,7 @@ async def authenticate_request(request: Request, call_next):
         return response
 
     token = request.cookies.get("access_token")
-    request.state.user = {"role": "guest"}
+    request.state.user = None
 
     async def generate_new_token():
         get_refresh_token = request.cookies.get("refresh_token")
@@ -83,7 +86,7 @@ async def authenticate_request(request: Request, call_next):
                 new_access_token = create_access_token(data={"email": refresh_payload.get("email"),
                                                              "name": refresh_payload.get("name"),
                                                              "user_id": refresh_payload.get("user_id")})
-                request.state.user = refresh_payload
+                request.state.user = new_access_token.encode()
                 new_response = await call_next(request)
                 new_response.set_cookie(key="access_token", value=new_access_token, httponly=True, secure=True, max_age=3600)
                 return new_response
@@ -94,8 +97,8 @@ async def authenticate_request(request: Request, call_next):
 
     if token and token not in token_black_list.black_list:
         try:
-            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-            request.state.user = payload
+            jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            request.state.user = token.encode()
         except jwt.ExpiredSignatureError:
             response = await generate_new_token()
             if response: return response
@@ -109,12 +112,21 @@ async def authenticate_request(request: Request, call_next):
     response = await call_next(request)
     return response
 
-@app.api_route('/home', methods=['POST', 'GET'])
-async def home(request: Request):
-    return templates.TemplateResponse(request=request, name='index/index.html')
+
+async def decode_access_token(request, all_=False):
+    if not request.state.user:
+        return
+    decode_data = jwt.decode(request.state.user, SECRET_KEY, algorithms=["HS256"])
+    if not all_: return decode_data.get('user_id')
+    return decode_data
 
 @app.get('/')
 async def root(): return RedirectResponse('/home')
+
+@app.api_route('/home', methods=['POST', 'GET'])
+async def home(request: Request):
+    all_data = await decode_access_token(request, True)
+    return templates.TemplateResponse(request=request, name='index/index.html', context={'user_data': all_data})
 
 @app.get('/sign-up/')
 async def sign_up(request: Request):
@@ -178,9 +190,7 @@ async def calculate_total_price(v2ray_config_associations):
 
 @app.get('/cart')
 async def cart(request: Request, db: Session = Depends(get_db)):
-    token = request.cookies.get("access_token")
-    payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-    user_id = payload.get('user_id')
+    user_id = await decode_access_token(request)
     db_cart = crud.get_cart(db, user_id)
     list_len = len(db_cart.v2ray_config_associations)
     price = await calculate_total_price(db_cart.v2ray_config_associations)
@@ -191,7 +201,7 @@ async def cart(request: Request, db: Session = Depends(get_db)):
 @app.post('/add_to_cart/')
 async def add_to_cart(config: schemas.ClientConfigReq, request: Request, db: Session = Depends(get_db)):
     try:
-        user_id = jwt.decode(request.cookies.get("access_token"), SECRET_KEY, algorithms=["HS256"]).get('user_id')
+        user_id = await decode_access_token(request)
         cart_id = crud.get_cart(db, user_id)
         check_in_cart = crud.is_config_available_in_cart(db, cart_id.cart_id, config.config_id)
         if check_in_cart:
@@ -206,7 +216,7 @@ async def add_to_cart(config: schemas.ClientConfigReq, request: Request, db: Ses
 @app.post('/add_config_count/')
 async def add_config_count(config: schemas.ClientConfigID, request: Request, db: Session = Depends(get_db)):
     try:
-        user_id = jwt.decode(request.cookies.get("access_token"), SECRET_KEY, algorithms=["HS256"]).get('user_id')
+        user_id = await decode_access_token(request)
         cart_id = crud.get_cart(db, user_id)
         check_in_cart = crud.is_config_available_in_cart(db, cart_id.cart_id, config.config_id)
         if check_in_cart:
@@ -220,7 +230,7 @@ async def add_config_count(config: schemas.ClientConfigID, request: Request, db:
 @app.patch('/subtract_config_count/')
 async def subtract_config_count(config: schemas.ClientConfigID, request: Request, db: Session = Depends(get_db)):
     try:
-        user_id = jwt.decode(request.cookies.get("access_token"), SECRET_KEY, algorithms=["HS256"]).get('user_id')
+        user_id = await decode_access_token(request)
         cart_id = crud.get_cart(db, user_id)
         check_in_cart = crud.is_config_available_in_cart(db, cart_id.cart_id, config.config_id)
         if check_in_cart:
@@ -316,7 +326,7 @@ async def crypto_initialization_payment(database, user_id, amount, action, id_ho
 async def payment( request: Request, payment_method: str = Form(...), db: Session = Depends(get_db)):
     try:
         action = 'cart_payment'
-        user_id = jwt.decode(request.cookies.get("access_token"), SECRET_KEY, algorithms=["HS256"]).get('user_id')
+        user_id = await decode_access_token(request)
         db_cart = crud.get_cart(db, user_id)
         amount = await calculate_total_price(db_cart.v2ray_config_associations)
 
@@ -375,7 +385,67 @@ def generate_random_string(length=5):
     random_string = ''.join(random.choice(characters) for _ in range(length))
     return random_string
 
-def create_new_service_for_user(service, database, ref_id, user_id):
+async def report_status_to_admin(text , user_id):
+    pass
+
+async def upgrade_service_in_server(service, database, user_id):
+    connect_to_server_instance.refresh_token()
+
+    inbound_id = service.inbound_id
+    client_email = service.config_email
+    get_server_domain = service.product.server_address
+    traffic_db = service.traffic_gb
+    period = service.period_day
+    price = service.price
+    now = datetime.now(pytz.timezone('Asia/Tehran'))
+
+    ret_conf = connect_to_server_instance.api_operation.get_inbound(inbound_id, get_server_domain)
+    client_list = json.loads(ret_conf['obj']['settings'])['clients']
+
+    for client in client_list:
+        if client['email'] == client_email:
+            client_id = client['id']
+            get_client_status = connect_to_server_instance.api_operation.get_client(client_email, get_server_domain)
+
+            if get_client_status['obj']['enable']:
+                tra = client['totalGB']
+                traffic = int((traffic_db * (1024 ** 3)) + tra)
+                expiry_timestamp = client['expiryTime']
+                expiry_datetime = datetime.fromtimestamp(expiry_timestamp / 1000)
+                new_expiry_datetime = expiry_datetime + timedelta(days=period)
+                my_data = int(new_expiry_datetime.timestamp() * 1000)
+            else:
+                traffic = int(traffic_db * (1024 ** 3))
+                my_data = now + timedelta(days=period)
+                my_data = int(my_data.timestamp() * 1000)
+                print(connect_to_server_instance.api_operation.reset_client_traffic(inbound_id, client_email, get_server_domain))
+
+            data = {
+                "id": inbound_id,
+                "settings": "{{\"clients\":[{{\"id\":\"{0}\",\"alterId\":0,"
+                            "\"email\":\"{1}\",\"limitIp\":0,\"totalGB\":{2},\"expiryTime\":{3},"
+                            "\"enable\":true,\"tgId\":\"\",\"subId\":\"\"}}]}}".format(
+                    client_id, client_email, traffic, my_data)}
+
+            update_client = connect_to_server_instance.api_operation.update_client(client_id, data, get_server_domain)
+
+            print(update_client)
+
+            crud.renew_service_suuccessfull(database, service.config_id, traffic, my_data)
+
+            await report_status_to_admin(
+                text=f'🕸️ User Upgrade Service [WEB SERVER]'
+                     f'\nService ID: {service.config_id}'
+                     f'\nService Name: {client_email}'
+                     f'\nTraffic: {traffic_db}GB'
+                     f'\nPeriod: {period}day'
+                     f'\nAmount: {price:,}',
+                user_id=user_id)
+
+            break
+
+
+async def create_new_service_for_user(service, database, user_id):
     config_key = uuid.uuid4().hex
     connect_to_server_instance.refresh_token()
 
@@ -387,7 +457,7 @@ def create_new_service_for_user(service, database, ref_id, user_id):
     create_config_schema = schemas.CreateConfigInDB(
         plan_name=service.plan_name, config_key=config_key, config_email=None, traffic_gb=service.traffic_gb,
         period_day=service.period_day, price=service.price, active=True, product_id=service.product_id,
-        owner_id=user_id, client_address=None, inbound_id=service.inbound_id
+        owner_id=user_id, client_address=None, inbound_id=service.inbound_id, update=True
     )
 
     create_config_db = models.V2RayConfig(**create_config_schema.dict())
@@ -418,6 +488,15 @@ def create_new_service_for_user(service, database, ref_id, user_id):
     create_config_db.client_address = client_address
     database.add(create_config_db)
 
+    await report_status_to_admin(
+        text=f'🕸️ User Buy Service [WEB APP]'
+             f'\nService ID: {service.config_id}'
+             f'\nService Name: {service.plan_name}'
+             f'\nTraffic: {service.traffic_gb}GB'
+             f'\nPeriod: {service.period_day}day'
+             f'\nAmount: {service.price:,}',
+        user_id=user_id)
+
     return create_config_db
 
 
@@ -427,13 +506,10 @@ async def recive_payment_result(Authority: str, Status: str, request: Request, d
     if Status == 'OK':
         try:
             with db.begin():
-
                 get_from_data = crud.get_payment_detail_by_authority(db, Authority)
-
                 if not get_from_data:
                     return templates.TemplateResponse(request=request, name='cart/fail_pay.html',
                                                       context={'error_reason': f'تراکنش مورد نظر در دیتابیس ما وجود ندارد. آیدی تراکنش {Authority}', 'error_code': 403})
-
                 amount, payment_action = get_from_data.amount, get_from_data.action
                 user_id: int = get_from_data.owner_id
                 cart_id: int = get_from_data.id_holder
@@ -442,9 +518,8 @@ async def recive_payment_result(Authority: str, Status: str, request: Request, d
                 # response = {'data': {"code": 100, 'ref_id': 214214214}}
 
                 if response.get('data', {}).get('code', 101) == 100:
-                    ref_id = response.get('data').get('ref_id')
+                    # ref_id = response.get('data').get('ref_id')
                     get_cart = crud.get_cart(db, user_id)
-
 
                     cart_item = db.query(models.CartV2RayConfigAssociation).filter(
                         models.CartV2RayConfigAssociation.cart_id == cart_id).first()
@@ -454,25 +529,21 @@ async def recive_payment_result(Authority: str, Status: str, request: Request, d
 
                     for service in get_cart.v2ray_config_associations:
                         if service.v2ray_config.update:
-                            continue
+                            await upgrade_service_in_server(service.v2ray_config, db, user_id)
 
                         service_count = service.count
-                        print(service_count)
 
                         for _ in range(service_count):
-                            create = create_new_service_for_user(service.v2ray_config, db, ref_id, user_id)
+                            create = await create_new_service_for_user(service.v2ray_config, db, user_id)
                             if not create: raise ValueError('config is not available in server')
 
-                    message = 'You Pay was successfull'
-                    return templates.TemplateResponse(request=request, name='dashboard/my_product.html', context={'message': message})
+                    return RedirectResponse('/dashboard/')
 
         except Exception as e:
-            print(e)
             db.rollback()
             price = await calculate_total_price(get_cart.v2ray_config_associations)
             crud.add_credit_to_user(db, user_id, price)
-            message = 'You Pay was Failed'
-            return templates.TemplateResponse(request=request, name='dashboard/my_product.html', context={'message': message})
+            return RedirectResponse('/dashboard/')
 
 
 async def get_server_details(all_services):
@@ -497,7 +568,7 @@ async def get_server_details(all_services):
 
 @app.get('/dashboard/')
 async def dashboard(request: Request, db: Session = Depends(get_db)):
-    user_id = jwt.decode(request.cookies.get("access_token"), SECRET_KEY, algorithms=["HS256"]).get('user_id')
+    user_id = await decode_access_token(request)
     all_services = crud.get_user_configs(db, user_id)
 
     return templates.TemplateResponse(request=request, name='dashboard/my_product.html', context={
@@ -512,7 +583,7 @@ async def remove_service_from_db(service):
 
 @app.delete('/remove-user-service/{config_id}')
 async def remove_user_service(config_id: int, request: Request, db: Session = Depends(get_db)):
-    user_id = jwt.decode(request.cookies.get("access_token"), SECRET_KEY, algorithms=["HS256"]).get('user_id')
+    user_id = await decode_access_token(request)
     try:
         service = crud.remove_config(db, config_id, user_id)
         await remove_service_from_db(service)
@@ -520,31 +591,30 @@ async def remove_user_service(config_id: int, request: Request, db: Session = De
     except Exception as e:
         return HTTPException(500, {'error': e})
 
+
 @app.patch('/add-service-to-cart-for-renew/')
 async def add_service_to_cart_for_renew(data: schemas.add_service_to_cart_for_renew, request: Request, db: Session = Depends(get_db)):
     try:
-        user_id = jwt.decode(request.cookies.get("access_token"), SECRET_KEY, algorithms=["HS256"]).get('user_id')
+        user_id = await decode_access_token(request)
         cart_id = crud.get_cart(db, user_id)
         check_in_cart = crud.is_config_available_in_cart(db, cart_id.cart_id, data.config_id)
         if check_in_cart:
             return {'status': 'nok', 'message': 'service already in cart'}
 
-        crud.make_service_upgradable(db, data.config_id)
+        # crud.make_service_upgradable(db, data.config_id)
         crud.add_to_cart(db, cart_id.cart_id, data.config_id)
 
         return {'status': 'ok'}
     except Exception as e:
-        print(e)
         return {'status': 'error', 'reason': str(e)}
 
 
 @app.post('/add_custom_service_to_cart/')
 async def add_custom_service_to_cart(config: schemas.ClientConfigReqCustom, request: Request, db: Session = Depends(get_db)):
     try:
-        price_per_gb, price_per_day = 1500, 500
         custom_service_inbound_id, custom_service_product_id = 1, 1
         calcuate_price = (price_per_gb * config.traffic) + (price_per_day * config.period)
-        user_id = jwt.decode(request.cookies.get("access_token"), SECRET_KEY, algorithms=["HS256"]).get('user_id')
+        user_id = await decode_access_token(request)
         cart_id = crud.get_cart(db, user_id)
         check_same_config = crud.does_same_config_available_in_cart(db, config.period, config.traffic)
 
@@ -567,5 +637,61 @@ async def add_custom_service_to_cart(config: schemas.ClientConfigReqCustom, requ
 
         return {'status': 'ok'}
     except Exception as e:
-        print(e)
+        return {'status': 'error', 'reason': str(e)}
+
+
+@app.post('/upgrade-foreign-service/')
+async def upgrade_foreign_service(config: schemas.UpgradeCustomService, request: Request, db: Session = Depends(get_db)):
+    try:
+        with db.begin():
+            user_id = await decode_access_token(request)
+            cart_id = crud.get_cart(db, user_id)
+
+            traffic, period = config.traffic, config.period
+            calcuate_price = (price_per_gb * config.traffic) + (price_per_day * config.period)
+            parsed_url = urlparse(config.config_address)
+
+            key = parsed_url.username
+            host = parsed_url.hostname
+            country = config.country
+            query_params = parse_qs(parsed_url.query)
+            email = str(parsed_url.fragment).split(' ')[-1]
+
+            encryption = query_params.get('encryption', [None])[0]
+            security = query_params.get('security', [None])[0]
+            network_type = query_params.get('type', [None])[0]
+            header_type = query_params.get('headerType', [None])[0]
+            header_host = query_params.get('host', [None])[0]
+
+
+            create_schema = schemas.CheckAnyProductMatch(
+                country=country, iran_domain_address=host, encryption=encryption, security=security,
+                network_type=network_type, header_type=header_type, header_host=header_host
+            )
+
+            match_product = crud.check_any_product_match(db, create_schema)
+            if not match_product:
+                return HTTPException(404, {'status': 'nok', 'message': 'there is no match product'})
+
+            get_service_detail = connect_to_server_instance.api_operation.get_client(
+                email,
+                match_product.server_address
+            )
+
+            if get_service_detail.get('success', False):
+                obj = get_service_detail.get('obj', {})
+                if obj:
+                    inbound_id = obj.get('inboundId')
+                    if inbound_id:
+                        create_config_schema = schemas.CreateConfigInDB(
+                            plan_name='خارجی', config_key=key, config_email=email, traffic_gb=traffic,
+                            period_day=period, price=calcuate_price, active=False, product_id=match_product.product_id,
+                            owner_id=user_id, client_address=config.config_address, inbound_id=inbound_id, update=True
+                        )
+                        service = crud.create_config(db, create_config_schema, commit=False)
+                        db.flush()
+                        crud.add_to_cart(db, cart_id.cart_id, service.config_id, commit=False)
+
+    except Exception as e:
+        db.rollback()
         return {'status': 'error', 'reason': str(e)}

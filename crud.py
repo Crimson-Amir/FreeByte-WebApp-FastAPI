@@ -53,11 +53,25 @@ def create_cart(db: Session, user_id: int):
     db.refresh(db_cart)
     return db_cart
 
-def add_to_cart(db: Session, cart_id: int, config_id: int):
+def add_to_cart(db: Session, cart_id: int, config_id: int, commit=True):
     add_relation = insert(models.CartV2RayConfigAssociation).values(cart_id=cart_id, config_id=config_id)
     db.execute(add_relation)
-    db.commit()
+    if commit: db.commit()
     return add_relation
+
+
+def renew_service_suuccessfull(db: Session, config_id: int, traffic: int, period: int):
+    update_stmt = (
+        update(models.V2RayConfig)
+        .where(models.V2RayConfig.config_id == config_id)
+        .values(active=True)
+        .values(traffic_gb=traffic)
+        .values(period_day=period)
+        .returning(models.CartV2RayConfigAssociation)
+    )
+
+    result = db.execute(update_stmt)
+    return result.scalar()
 
 
 def make_service_upgradable(db: Session, config_id: int):
@@ -134,12 +148,31 @@ def is_config_available_in_cart(db: Session, cart_id: int, config_id: int):
             .filter(models.CartV2RayConfigAssociation.cart_id == cart_id)
             .filter(models.CartV2RayConfigAssociation.config_id == config_id)
             .first())
+
 def does_same_config_available_in_cart(db: Session, period: int, traffic: int):
     return (db.query(models.V2RayConfig)
             .filter(models.V2RayConfig.traffic_gb == traffic)
             .filter(models.V2RayConfig.period_day == period)
             .filter(models.V2RayConfig.active == False)
             .first())
+
+def check_any_product_match(db: Session, data: schemas.CheckAnyProductMatch):
+    query = db.query(models.Product).filter(
+        models.Product.country == data.country,
+        models.Product.iran_domain_address == data.iran_domain_address
+    )
+    if data.encryption:
+        query = query.filter(models.Product.encryption == data.encryption)
+    if data.security:
+        query = query.filter(models.Product.security == data.security)
+    if data.network_type:
+        query = query.filter(models.Product.network_type == data.network_type)
+    if data.header_type:
+        query = query.filter(models.Product.header_type == data.header_type)
+    if data.header_host:
+        query = query.filter(models.Product.header_host == data.header_host)
+    return query.first()
+
 
 def create_product(db: Session, item: schemas.ProductCreate):
     db_item = models.Product(**item.dict())
@@ -148,11 +181,12 @@ def create_product(db: Session, item: schemas.ProductCreate):
     db.refresh(db_item)
     return db_item
 
-def create_config(db: Session, config: schemas.CreateConfigInDB):
+def create_config(db: Session, config: schemas.CreateConfigInDB, commit=True):
     db_config = models.V2RayConfig(**config.dict())
     db.add(db_config)
-    db.commit()
-    db.refresh(db_config)
+    if commit:
+        db.commit()
+        db.refresh(db_config)
     return db_config
 
 def remove_config(db: Session, config_id: int, owner_id: int):

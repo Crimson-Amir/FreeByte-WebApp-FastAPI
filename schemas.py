@@ -74,6 +74,21 @@ class ClientConfig(ClientConfigBase):
     config_id: int
     class Config: orm_mode = True
 
+class UpgradeCustomService(BaseModel):
+    config_address: str
+    country: str
+    traffic: int
+    period: int
+
+class CheckAnyProductMatch(BaseModel):
+    country: str
+    iran_domain_address: str
+    encryption: str | None
+    security: str
+    network_type: str
+    header_type: str
+    header_host: str
+
 class CreateIranInvoiceBeforPay(BaseModel):
     action: str
     id_holder: int

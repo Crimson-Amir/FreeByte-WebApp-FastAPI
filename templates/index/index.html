@@ -44,7 +44,7 @@
         <div class="col-md-7 col-lg-6 mt-5 text-center text-md-end">
           <h1 class="fw-medium vazir_medium ht-55">دسترسی امن به اینترنت<br />به همراه <span class="fw-bold">فری‌بایت</span></h1>
           <p class="mt-4 mb-4">ما در <span class="fw-medium">فری‌بایت </span> تلاش میکنیم حداقل اختلال را داشته باشیم و شبکه ای مناسب برای نیاز های شما فراهم کنیم.</p>
-          <a class="mt-1 btn btn-lg btn-danger hover-top btn-glow" href="#">شروع کنید </a>
+          <a class="mt-1 btn btn-lg btn-danger hover-top btn-glow" href="#buy-plane">شروع کنید </a>
         </div>
       </div>
     </div>
@@ -95,7 +95,7 @@
               <div class="text-center my-5">
                 <h2 class="mb-3 vazir_medium">45,000<span class="text-900">/ماه</span>
                 </h2>
-                {% if request.state.user.email %}
+                {% if user_data %}
                 <form class="buy-service-form">
                   <input type="hidden" name="traffic" class="traffic-input" value="20">
                   <input type="hidden" name="period" class="period-input" value="30">
@@ -141,7 +141,7 @@
               <div class="text-center my-5">
                 <h2 class="mb-3 vazir_medium">60,000<span class="text-900">/ماه</span>
                 </h2>
-                {% if request.state.user.email %}
+                {% if user_data %}
                 <form class="buy-service-form">
                   <input type="hidden" name="traffic" class="traffic-input" value="30">
                   <input type="hidden" name="period" class="period-input" value="30">
@@ -192,7 +192,7 @@
               <div class="text-center my-5">
                 <h2 class="mb-3">90,000<span class="text-900 vazir_medium">/ماه</span>
                 </h2>
-                {% if request.state.user.email %}
+                {% if user_data %}
                 <form class="buy-service-form">
                   <input type="hidden" name="traffic" class="traffic-input" value="60">
                   <input type="hidden" name="period" class="period-input" value="30">
@@ -221,7 +221,6 @@
         <!-- فرم خرید سرویس -->
         <div class="col-12 col-md-6 col-lg-5 my-4">
           <div class="card h-100">
-            {% if request.state.user.email %}
 
             <form id="buy-custom-service-form" class="buy-custom-service-form card-body d-flex flex-column justify-content-around mx-auto">
               <h2 class="text-900 vazir_medium pb-4 mt-4">سرویس مورد نظر خودتون رو بسازید:</h2>
@@ -242,10 +241,12 @@
               <div class="price mb-4" style="text-align: center;">قیمت: <span id="price">0</span> تومان</div>
               <input type="hidden" name="product_id" class="product_id-input" value="1">
               <input type="hidden" name="config_id" class="config_id-input" value="0">
+              {% if user_data %}
               <input class="btn btn-outline-danger rounded-pill vazir_medium" type="submit" value="خرید">
+              {% else %}
+              <a class="btn btn-outline-danger rounded-pill vazir_medium" href="/sign-up/">ثبت نام</a>
             </form>
-            {% else %}
-            <a class="btn btn-outline-danger rounded-pill vazir_medium" href="/sign-up/">ثبت نام</a>
+
             {% endif %}
           </div>
         </div>
@@ -253,36 +254,20 @@
         <!-- فرم وارد کردن دستی و آدرس سرویس -->
         <div class="col-12 col-md-6 col-lg-5 my-4">
           <div id="upgrade-service" class="card h-100">
-            {% if request.state.user.email %}
-            <!-- Nav tabs -->
-            <ul class="nav nav-tabs" id="serviceTabs" role="tablist">
-              <li class="nav-item" role="presentation">
-                <a class="nav-link active vazir_medium" id="manual-entry-tab" data-bs-toggle="tab" href="#manual-entry" role="tab" aria-controls="manual-entry" aria-selected="true">وارد کردن دستی</a>
-              </li>
-              <li class="nav-item" role="presentation">
-                <a class="nav-link vazir_medium" id="service-address-tab" data-bs-toggle="tab" href="#service-address" role="tab" aria-controls="service-address" aria-selected="false">وارد کردن آدرس سرویس</a>
-              </li>
-            </ul>
-
-            <!-- Tab panes -->
+            <h2 class="text-900 vazir_medium mt-5" style="text-align: center;">سرویس خارج از سایت رو ارتقا بدید:</h2>
             <div class="tab-content" id="serviceTabsContent" style="padding: 1rem;">
               <!-- Manual Entry Tab -->
               <div class="tab-pane fade show active" id="manual-entry" role="tabpanel" aria-labelledby="manual-entry-tab">
-                <form id="manual-entry-form" class="card-body d-flex flex-column mx-auto">
+                <form id="manual-entry-form" class="manual-entry-form card-body d-flex flex-column mx-auto">
                   <div class="mb-3">
-                    <label for="client-key" class="form-label vazir_medium">کلید کلاینت</label>
-                    <input type="text" id="client-key" class="form-control" required>
-                  </div>
-
-                  <div class="mb-3">
-                    <label for="client-email" class="form-label vazir_medium">ایمیل کلاینت</label>
-                    <input type="email" id="client-email" class="form-control" required>
+                    <label for="client_address" class="client_address form-label vazir_medium">آدرس کلاینت</label>
+                    <input type="text" id="client_address" class="client_address form-control" required>
                   </div>
 
                   <div class="row mb-3">
                     <div class="col-12 col-md-4 mb-3 mb-md-0">
                       <label for="client-country" class="form-label vazir_medium">کشور کلاینت</label>
-                      <select id="client-country" class="form-select" required>
+                      <select id="client-country" class="client-country form-select" required>
                         <option value="">انتخاب کشور</option>
                         <option value="finland">فنلاند</option>
                         <option value="germany">آلمان</option>
@@ -291,59 +276,25 @@
                     </div>
                     <div class="col-12 col-md-4 mb-3 mb-md-0">
                       <label for="manual-traffic" class="form-label vazir_medium">حجم (گیگابایت)</label>
-                      <input type="number" id="manual-traffic" class="form-control" style="padding: 6px;" value="1" min="1" max="100" required>
+                      <input type="number" id="manual-traffic" class="manual-traffic form-control" style="padding: 6px;width: 100px;" value="1" min="1" max="100" required>
                     </div>
                     <div class="col-12 col-md-4">
                       <label for="manual-period" class="form-label vazir_medium">دوره زمانی (روز)</label>
-                      <input type="number" id="manual-period" class="form-control" style="padding: 6px;" value="1" min="1" max="100" required>
+                      <input type="number" id="manual-period" class="manual-period form-control" style="padding: 6px;width: 100px;" value="1" min="1" max="100" required>
                     </div>
                   </div>
 
-                  <div class="price mb-3">قیمت: <span id="manual-price">0.00</span> تومان</div>
+                  <div class="price mb-3" style="margin-bottom: 20px;">قیمت: <span id="manual-price">0</span> تومان</div>
                   <input type="hidden" name="product_id" class="product_id-input" value="1">
                   <input type="hidden" name="config_id" class="config_id-input" value="0">
-                  <input class="btn btn-primary rounded-pill vazir_medium" type="submit" value="خرید">
-                </form>
-              </div>
-
-              <!-- Service Address Tab -->
-              <div class="tab-pane fade" id="service-address" role="tabpanel" aria-labelledby="service-address-tab">
-                <form id="service-address-form" class="card-body d-flex flex-column mx-auto">
-                  <div class="mb-3">
-                    <label for="service-address" class="form-label vazir_medium">آدرس سرویس</label>
-                    <input type="text" id="service-address" class="form-control" required>
-                  </div>
-
-                  <div class="mb-3">
-                    <label for="service-country" class="form-label vazir_medium">کشور سرویس</label>
-                    <select id="service-country" class="form-select" required>
-                      <option value="">انتخاب کشور</option>
-                      <option value="finland">فنلاند</option>
-                      <option value="germany">آلمان</option>
-                      <option value="usa">آمریکا</option>
-                    </select>
-                  </div>
-
-                  <div class="row mb-3">
-                    <div class="col-12 col-md-6 mb-3 mb-md-0">
-                      <label for="service-traffic" class="form-label vazir_medium">ترافیک (گیگابایت)</label>
-                      <input type="number" id="service-traffic" class="form-control" style="padding: 6px;" value="1" min="1" max="500" required>
-                    </div>
-                    <div class="col-12 col-md-6">
-                      <label for="service-period" class="form-label vazir_medium">دوره زمانی (روز)</label>
-                      <input type="number" id="service-period" class="form-control" style="padding: 6px;" value="1" min="1" max="365" required>
-                    </div>
-                  </div>
-
-                  <div class="price mb-3">قیمت: <span id="service-price">0.00</span> تومان</div>
-                  <input type="hidden" name="product_id" class="product_id-input" value="1">
-                  <input type="hidden" name="config_id" class="config_id-input" value="0">
-                  <input class="btn btn-primary rounded-pill vazir_medium" type="submit" value="خرید">
+                  {% if user_data %}
+                  <input class="btn btn-primary rounded-pill vazir_medium" style="width: 100%;" type="submit" value="خرید">
+                  {% else %}
+                  <a class="btn btn-outline-danger rounded-pill vazir_medium" href="/sign-up/">ثبت نام</a>
                 </form>
               </div>
             </div>
-            {% else %}
-            <a class="btn btn-outline-danger rounded-pill vazir_medium" href="/sign-up/">ثبت نام</a>
+
             {% endif %}
           </div>
         </div>
@@ -351,9 +302,6 @@
       </div>
     </div>
   </div>
-
-
-
 
 
   <!-- ============================================-->
@@ -560,6 +508,46 @@
           .then(data => {
               if (data.status === 'ok') {
                   showTemporaryMessage('سرویس با موفقیت به سبد خرید اضافه شد!', 'success');
+              } else if (data.status === 'error') {
+                  showTemporaryMessage('مشکلی در ارسال درخواست وجود داشت!', 'error');
+              } else {
+                  showTemporaryMessage('جواب غیرمنتظره از سرور دریافت شد', 'error');
+              }
+          })
+          .catch((error) => {
+              console.error('Error:', error);
+              showTemporaryMessage('اتصال به سرور موفقیت آمیز نبود!', 'error');
+          });
+      });
+  });
+
+
+    document.querySelectorAll('.manual-entry-form').forEach(form => {
+      form.addEventListener('submit', event => {
+          event.preventDefault();
+          console.log('Form submitted');
+
+          const traffic = form.querySelector('.manual-traffic').value;
+          const period = form.querySelector('.manual-period').value;
+          const client_address = form.querySelector('.client_address').value;
+          const client_country = form.querySelector('.client-country').value;
+
+          fetch('/upgrade-foreign-service/', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                  config_address: client_address,
+                  country: client_country,
+                  traffic: traffic,
+                  period: period,
+              }),
+          })
+          .then(response => response.json())
+          .then(data => {
+              if (data.status === 'ok') {
+                  showTemporaryMessage('سفارش با موفقیت به سبد خرید اضافه شد!', 'success');
               } else if (data.status === 'error') {
                   showTemporaryMessage('مشکلی در ارسال درخواست وجود داشت!', 'error');
               } else {
