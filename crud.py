@@ -35,8 +35,11 @@ def add_credit_to_user(db: Session, user_id: int, credit: int):
 def get_all_server(db: Session):
     return db.query(models.Product).distinct().all()
 
-def get_config(db: Session, config_id: int):
-    return db.query(models.V2RayConfig).where(models.V2RayConfig.config_id == config_id).first()
+def get_config(db: Session, config_id: int, user_id: int):
+    return (db.query(models.V2RayConfig)
+            .where(models.V2RayConfig.config_id == config_id)
+            .where(models.V2RayConfig.owner_id == user_id)
+            .first())
 
 def create_user(db: Session, user: schemas.UserCreate):
     hashed_password = hash_password_md5(user.password)

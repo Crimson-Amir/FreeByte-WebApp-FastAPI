@@ -261,13 +261,13 @@
                 <form id="manual-entry-form" class="manual-entry-form card-body d-flex flex-column mx-auto">
                   <div class="mb-3">
                     <label for="client_address" class="client_address form-label vazir_medium">آدرس کلاینت</label>
-                    <input type="text" id="client_address" class="client_address form-control" required>
+                    <input type="text" id="client_address" class="client_address form-control">
                   </div>
 
                   <div class="row mb-3">
                     <div class="col-12 col-md-4 mb-3 mb-md-0">
                       <label for="client-country" class="form-label vazir_medium">کشور کلاینت</label>
-                      <select id="client-country" class="client-country form-select" required>
+                      <select id="client-country" class="client-country form-select">
                         <option value="">انتخاب کشور</option>
                         <option value="finland">فنلاند</option>
                         <option value="germany">آلمان</option>
@@ -276,11 +276,11 @@
                     </div>
                     <div class="col-12 col-md-4 mb-3 mb-md-0">
                       <label for="manual-traffic" class="form-label vazir_medium">حجم (گیگابایت)</label>
-                      <input type="number" id="manual-traffic" class="manual-traffic form-control" style="padding: 6px;width: 100px;" value="1" min="1" max="100" required>
+                      <input type="number" id="manual-traffic" class="manual-traffic form-control" style="padding: 6px;width: 100px;" value="1" min="1" max="100">
                     </div>
                     <div class="col-12 col-md-4">
                       <label for="manual-period" class="form-label vazir_medium">دوره زمانی (روز)</label>
-                      <input type="number" id="manual-period" class="manual-period form-control" style="padding: 6px;width: 100px;" value="1" min="1" max="100" required>
+                      <input type="number" id="manual-period" class="manual-period form-control" style="padding: 6px;width: 100px;" value="1" min="1" max="100">
                     </div>
                   </div>
 
@@ -483,6 +483,7 @@
               console.error('Error:', error);
               showTemporaryMessage('اتصال به سرور موفقیت آمیز نبود!', 'error');
           });
+
       });
   });
 
@@ -649,6 +650,9 @@
             slider.value = value;
             updateBuyServicePrice(); // به‌روزرسانی قیمت فرم خرید سرویس
         });
+
+                      updateBuyServicePrice();
+              updateManualPrice();
     }
 
     // تنظیم هماهنگی برای فرم‌های مختلف

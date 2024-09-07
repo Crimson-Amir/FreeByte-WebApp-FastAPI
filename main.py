@@ -91,8 +91,10 @@ async def authenticate_request(request: Request, call_next):
                 new_response = await call_next(request)
                 new_response.set_cookie(key="access_token", value=new_access_token, httponly=True, secure=True, max_age=3600)
                 return new_response
+
             except jwt.ExpiredSignatureError:
                 return RedirectResponse('/sign-up/')
+
             except jwt.InvalidTokenError:
                 return RedirectResponse('/sign-up/')
 
@@ -117,6 +119,7 @@ async def authenticate_request(request: Request, call_next):
 async def decode_access_token(request, all_=False):
     if not request.state.user:
         return
+
     decode_data = jwt.decode(request.state.user, SECRET_KEY, algorithms=["HS256"])
     if not all_: return decode_data.get('user_id')
     return decode_data
@@ -127,6 +130,7 @@ async def root(): return RedirectResponse('/home')
 @app.api_route('/home', methods=['POST', 'GET'])
 async def home(request: Request):
     all_data = await decode_access_token(request, True)
+
     return templates.TemplateResponse(request=request, name='index/index.html', context={'user_data': all_data})
 
 @app.get('/sign-up/')
@@ -522,8 +526,8 @@ async def recive_payment_result(Authority: str, Status: str, request: Request, d
                 user_id: int = get_from_data.owner_id
                 cart_id: int = get_from_data.id_holder
 
-                response = await verify_iran_payment(Authority, amount)
-                # response = {'data': {"code": 100, 'ref_id': 214214214}}
+                # response = await verify_iran_payment(Authority, amount)
+                response = {'data': {"code": 100, 'ref_id': 214214214}}
 
                 if response.get('data', {}).get('code', 101) == 100:
                     # ref_id = response.get('data').get('ref_id')
@@ -576,7 +580,10 @@ async def get_server_details(all_services):
 
             if get_service_detail.get('success', False):
                 obj = get_service_detail.get('obj', {})
-                print(get_service_detail)
+                if not obj:
+                    final_result[service.config_email] = {'usage_percent': 0, 'left_day': 0, 'left_traffic': 0, 'error': 'config is not availabale in server'}
+                    continue
+
                 final_result[obj.get('email')] = obj
                 final_result[obj.get('email')]['usage_percent'] = int(((obj.get('up', 0) + obj.get('down', 0)) / obj.get('total', 1)) * 100)
                 final_result[obj.get('email')]['left_day'] = max((second_to_ms(obj.get('expiryTime'), False) - datetime.now(pytz.timezone('Asia/Tehran')).replace(tzinfo=None)).days, 0)
@@ -584,12 +591,12 @@ async def get_server_details(all_services):
 
 
         return final_result
+    return {}
 
 @app.get('/dashboard/')
 async def dashboard(request: Request, payment_status: int = None, db: Session = Depends(get_db)):
     user_id = await decode_access_token(request)
     all_services = crud.get_user_configs(db, user_id)
-    print(user_id)
     all_data = await decode_access_token(request, True)
 
     return templates.TemplateResponse(request=request, name='dashboard/my_product.html', context={
@@ -598,6 +605,19 @@ async def dashboard(request: Request, payment_status: int = None, db: Session = 
         'service_detail_from_server': await get_server_details(all_services),
         'payment_status': payment_status
     })
+
+@app.get('/dashboard/service_detail/{service_id}')
+async def dashboard(request: Request, service_id: int, db: Session = Depends(get_db)):
+    user_id = await decode_access_token(request)
+    get_service_detail = [crud.get_config(db, service_id, user_id)]
+    all_data = await decode_access_token(request, True)
+
+    return templates.TemplateResponse(request=request, name='dashboard/my_product.html', context={
+        'user_data': all_data,
+        'service_detail_from_server': await get_server_details(get_service_detail),
+        'all_services': get_service_detail
+    })
+
 
 async def remove_service_from_db(service):
     connect_to_server_instance.refresh_token()

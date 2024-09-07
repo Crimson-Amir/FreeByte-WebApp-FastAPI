@@ -29,13 +29,14 @@
 
 
         {% if all_services %}
+
         {% for service in all_services %}
+        {% if service_detail_from_server.get(service.config_email) %}
 
-
-        {% if service_detail_from_server[service.config_email] %}
         <div class="service-card" data-percentage="{{ service_detail_from_server[service.config_email]['usage_percent'] }}">
             <div class="service-details">
                 <div class="service-info">
+
                     <h3 style="{% if not service_detail_from_server[service.config_email]['enable'] %} color: red; {% endif %}">سرویس {{service.plan_name}} شماره {{service.config_id}}</h3>
                     <p>زمان باقی‌مانده: {{ service_detail_from_server[service.config_email]['left_day'] }} روز</p>
                     <p>حجم باقی‌مانده: {{ service_detail_from_server[service.config_email]['left_traffic'] }} گیگابایت</p>
@@ -48,7 +49,9 @@
                     </svg>
                     <div class="percentage">70%</div>
                 </div>
+
                 {% else %}
+
                 <div class="service-card">
                     <div class="service-details">
                         <div class="service-info">
@@ -58,12 +61,12 @@
 
                         </div>
 
-                        <a href="/dashboard/service_detail_2" class="view_service_detail">مشاهده جزئیات سرویس</a>
+                        <a href="/dashboard/service_detail/{{service.config_id}}" class="view_service_detail">مشاهده جزئیات سرویس</a>
                         {% endif %}
 
                     </div>
                     <div class="actions">
-
+                        {% if not service_detail_from_server.get(service.config_email, {}).get("error") %}
                         <input type="text" id="hiddenConfigAddress" value="{{ service.client_address }}" style="position: absolute; left: -9999px;">
                         <button class="widt-175px" style="margin-left: 10px;" onclick="copyToClipboard()">دریافت لینک سرویس</button>
 
@@ -76,11 +79,18 @@
                             <input type="hidden" class="config_id-input" value="{{ service.config_id }}">
                             <input type="submit" class="widt-175px" style="margin-left: 10px;" value="حذف سرویس">
                         </form>
+                        {% else %}
+
+                        {% if service_detail_from_server.get(service.config_email) %}
+                        <div style="color: red;">Error: {{ service_detail_from_server[service.config_email]["error"] }}</div>
+                        {% endif %}
+
+                        {% endif %}
+
                     </div>
                 </div>
 
                 {% endfor %}
-
 
                 {% else %}
 
