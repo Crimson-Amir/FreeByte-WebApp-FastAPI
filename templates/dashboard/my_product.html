@@ -105,160 +105,161 @@
 
                 {% endif %}
             </div>
+        </div>
 
-            <script src="{{ url_for('static', path='index/assets/js/theme.js') }}"></script>
-            <script src="{{ url_for('static', path='index/vendors/bootstrap/bootstrap.min.js') }}"></script>
+        <script src="{{ url_for('static', path='index/assets/js/theme.js') }}"></script>
+        <script src="{{ url_for('static', path='index/vendors/bootstrap/bootstrap.min.js') }}"></script>
 
-            <script>
-                function setProgress(element, percentage) {
-                    const circle = element.querySelector('.circle');
-                    const radius = circle.r.baseVal.value;
-                    const circumference = 2 * Math.PI * radius;
-                    const offset = circumference - (percentage / 100 * circumference);
+        <script>
+            function setProgress(element, percentage) {
+                const circle = element.querySelector('.circle');
+                const radius = circle.r.baseVal.value;
+                const circumference = 2 * Math.PI * radius;
+                const offset = circumference - (percentage / 100 * circumference);
 
-                    // اضافه کردن انیمیشن به دایره
-                    setTimeout(() => {
-                        circle.style.strokeDashoffset = offset;
-                        element.querySelector('.percentage').textContent = `${percentage}%`;
-                    }, 500);
-                }
+                // اضافه کردن انیمیشن به دایره
+                setTimeout(() => {
+                    circle.style.strokeDashoffset = offset;
+                    element.querySelector('.percentage').textContent = `${percentage}%`;
+                }, 500);
+            }
 
-                // تنظیم درصد برای همه سرویس‌ها
-                document.querySelectorAll('.service-card').forEach(card => {
-                    const percentage = card.getAttribute('data-percentage');
-                    setProgress(card.querySelector('.progress-circle'), percentage);
+            // تنظیم درصد برای همه سرویس‌ها
+            document.querySelectorAll('.service-card').forEach(card => {
+                const percentage = card.getAttribute('data-percentage');
+                setProgress(card.querySelector('.progress-circle'), percentage);
 
-                    card.addEventListener('click', () => {
-                        card.classList.toggle('expanded');
-                    });
-                });
-
-                function copyToClipboard() {
-                var copyText = document.getElementById("hiddenConfigAddress");
-                copyText.select();
-                copyText.setSelectionRange(0, 99999);
-
-                document.execCommand("copy");
-
-                alert("آدرس سرویس در کلیپ بورد شما کپی شد: ");
-        }
-
-        document.querySelectorAll('.remove_service').forEach(form => {
-            form.addEventListener('submit', event => {
-                event.preventDefault();
-
-                const userConfirmed = confirm('آیا مطمئن هستید که می‌خواهید این سرویس را حذف کنید؟');
-                if (!userConfirmed) {
-                    return;
-                }
-
-                const configId = form.querySelector('.config_id-input').value;
-
-                fetch(`/remove-user-service/${configId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'ok') {
-                        form.closest('.service-card').remove();
-                        showTemporaryMessage('سرویس با موفقیت حذف شد', 'success');
-                    } else {
-                        showTemporaryMessage('مشکلی در ثبت درخواست وجود داشت!', 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showTemporaryMessage('اتصال به سرور موفقیت‌آمیز نبود!', 'error');
+                card.addEventListener('click', () => {
+                    card.classList.toggle('expanded');
                 });
             });
-        });
 
+            function copyToClipboard() {
+            var copyText = document.getElementById("hiddenConfigAddress");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
 
-        document.querySelectorAll('.renew_service').forEach(form => {
-            form.addEventListener('submit', event => {
-                event.preventDefault();
+            document.execCommand("copy");
 
-                const configId = form.querySelector('.config_id-input').value;
+            alert("آدرس سرویس در کلیپ بورد شما کپی شد: ");
+    }
 
-                fetch(`/add-service-to-cart-for-renew`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ config_id: configId })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'ok') {
-                        showTemporaryMessage('تمدید سرویس با موفقیت به سبدخرید اضافه شد', 'success');
-                    }
-                     else if (data.status === 'nok') {
-                        showTemporaryMessage('سفارش تمدید این سرویس از قبل در سبد خرید شما وجود دارد', 'error');
-                    }
-                     else {
-                        showTemporaryMessage('مشکلی در ثبت درخواست وجود داشت!', 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showTemporaryMessage('اتصال به سرور موفقیت‌آمیز نبود!', 'error');
-                });
+    document.querySelectorAll('.remove_service').forEach(form => {
+        form.addEventListener('submit', event => {
+            event.preventDefault();
+
+            const userConfirmed = confirm('آیا مطمئن هستید که می‌خواهید این سرویس را حذف کنید؟');
+            if (!userConfirmed) {
+                return;
+            }
+
+            const configId = form.querySelector('.config_id-input').value;
+
+            fetch(`/remove-user-service/${configId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    form.closest('.service-card').remove();
+                    showTemporaryMessage('سرویس با موفقیت حذف شد', 'success');
+                } else {
+                    showTemporaryMessage('مشکلی در ثبت درخواست وجود داشت!', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showTemporaryMessage('اتصال به سرور موفقیت‌آمیز نبود!', 'error');
             });
         });
+    });
 
 
-        function showTemporaryMessage(message, type) {
-            const messageDiv = document.createElement('div');
-            messageDiv.textContent = message;
-            messageDiv.className = `temporary-message ${type}`;
+    document.querySelectorAll('.renew_service').forEach(form => {
+        form.addEventListener('submit', event => {
+            event.preventDefault();
 
-            messageDiv.style.position = 'fixed';
-            messageDiv.style.top = '80px';
-            messageDiv.style.left = '50%';
-            messageDiv.style.transform = 'translateX(-50%)';
-            messageDiv.style.zIndex = '1031';
-            messageDiv.style.padding = '15px 30px';
-            messageDiv.style.color = 'white';
-            messageDiv.style.backgroundColor = type === 'success' ? 'green' : 'red';
-            messageDiv.style.borderRadius = '8px';
-            messageDiv.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
-            messageDiv.style.fontSize = '16px';
-            messageDiv.style.textAlign = 'center';
-            messageDiv.style.whiteSpace = 'nowrap';
-            messageDiv.style.pointerEvents = 'none';
+            const configId = form.querySelector('.config_id-input').value;
 
-            document.body.appendChild(messageDiv);
-            console.log("Message added to DOM:", messageDiv);
+            fetch(`/add-service-to-cart-for-renew`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ config_id: configId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    showTemporaryMessage('تمدید سرویس با موفقیت به سبدخرید اضافه شد', 'success');
+                }
+                 else if (data.status === 'nok') {
+                    showTemporaryMessage('سفارش تمدید این سرویس از قبل در سبد خرید شما وجود دارد', 'error');
+                }
+                 else {
+                    showTemporaryMessage('مشکلی در ثبت درخواست وجود داشت!', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showTemporaryMessage('اتصال به سرور موفقیت‌آمیز نبود!', 'error');
+            });
+        });
+    });
 
-            setTimeout(() => {
-                messageDiv.remove();
-                console.log("Message removed from DOM");
-            }, 3000);
-        }
+
+    function showTemporaryMessage(message, type) {
+        const messageDiv = document.createElement('div');
+        messageDiv.textContent = message;
+        messageDiv.className = `temporary-message ${type}`;
+
+        messageDiv.style.position = 'fixed';
+        messageDiv.style.top = '80px';
+        messageDiv.style.left = '50%';
+        messageDiv.style.transform = 'translateX(-50%)';
+        messageDiv.style.zIndex = '1031';
+        messageDiv.style.padding = '15px 30px';
+        messageDiv.style.color = 'white';
+        messageDiv.style.backgroundColor = type === 'success' ? 'green' : 'red';
+        messageDiv.style.borderRadius = '8px';
+        messageDiv.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
+        messageDiv.style.fontSize = '16px';
+        messageDiv.style.textAlign = 'center';
+        messageDiv.style.whiteSpace = 'nowrap';
+        messageDiv.style.pointerEvents = 'none';
+
+        document.body.appendChild(messageDiv);
+        console.log("Message added to DOM:", messageDiv);
+
+        setTimeout(() => {
+            messageDiv.remove();
+            console.log("Message removed from DOM");
+        }, 3000);
+    }
 
 document.getElementById("dropdownMenuButton").addEventListener("click", function(event) {
-    event.preventDefault();
-    var dropdownMenu = document.getElementById("dropdownMenu");
-    dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
+event.preventDefault();
+var dropdownMenu = document.getElementById("dropdownMenu");
+dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
 });
 
 // بستن منو اگر در جای دیگری کلیک شد
 window.addEventListener("click", function(event) {
-    if (!event.target.matches('.user-name-button')) {
-        var dropdowns = document.getElementsByClassName("dropdown-menu");
-        for (var i = 0; i < dropdowns.length; i++) {
-            var openDropdown = dropdowns[i];
-            if (openDropdown.style.display === "block") {
-                openDropdown.style.display = "none";
-            }
+if (!event.target.matches('.user-name-button')) {
+    var dropdowns = document.getElementsByClassName("dropdown-menu");
+    for (var i = 0; i < dropdowns.length; i++) {
+        var openDropdown = dropdowns[i];
+        if (openDropdown.style.display === "block") {
+            openDropdown.style.display = "none";
         }
     }
+}
 });
 
-            </script>
+        </script>
 </main>
 </body>
 </html>

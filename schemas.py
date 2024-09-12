@@ -89,6 +89,17 @@ class CheckAnyProductMatch(BaseModel):
     header_type: str
     header_host: str
 
+class CryptomusPaymentWebhook(BaseModel):
+    type: str
+    uuid: str
+    order_id: str
+    amount: str
+    payment_amount_usd: str
+    is_final: bool
+    status: str
+    sign: str
+    additional_data: str
+
 class CreateIranInvoiceBeforPay(BaseModel):
     action: str
     id_holder: int

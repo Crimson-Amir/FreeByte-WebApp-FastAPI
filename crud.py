@@ -41,6 +41,12 @@ def get_config(db: Session, config_id: int, user_id: int):
             .where(models.V2RayConfig.owner_id == user_id)
             .first())
 
+def get_config_by_email(db: Session, config_email: str, user_id: int):
+    return (db.query(models.V2RayConfig)
+            .where(models.V2RayConfig.config_email == config_email)
+            .where(models.V2RayConfig.owner_id == user_id)
+            .first())
+
 def create_user(db: Session, user: schemas.UserCreate):
     hashed_password = hash_password_md5(user.password)
     db_user = models.User(name=user.name, email=user.email, hashed_password=hashed_password)
@@ -70,11 +76,19 @@ def renew_service_suuccessfull(db: Session, config_id: int, traffic: int, period
         .values(active=True)
         .values(traffic_gb=traffic)
         .values(period_day=period)
-        .returning(models.CartV2RayConfigAssociation)
     )
+    db.execute(update_stmt)
 
-    result = db.execute(update_stmt)
-    return result.scalar()
+
+def update_config_traffic_and_period(db: Session, config_id: int, traffic: int, period: int, price: int):
+    update_stmt = (
+        update(models.V2RayConfig)
+        .where(models.V2RayConfig.config_id == config_id)
+        .values(traffic_gb=traffic)
+        .values(period_day=period)
+        .values(price=price)
+    )
+    db.execute(update_stmt)
 
 
 def make_service_upgradable(db: Session, config_id: int):
@@ -132,6 +146,10 @@ def get_product(db: Session, skip: int = 0, limit: int = 100):
 
 def get_payment_detail_by_authority(db: Session, authority: str):
     return db.query(models.IranPaymentGewayInvoice).filter(models.IranPaymentGewayInvoice.authority == authority).first()
+
+def get_crypto_payment_detail_by_order_id(db: Session, order_id: str):
+    return db.query(models.CryptomusPaymentGewayInvoice).filter(models.CryptomusPaymentGewayInvoice.order_id == order_id).first()
+
 
 def get_cart(db: Session, user_id: int):
     return db.query(models.Cart).filter(user_id == models.Cart.owner_id).first()

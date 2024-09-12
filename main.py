@@ -1,3 +1,4 @@
+import sqlalchemy.exc
 from fastapi import FastAPI, Request, Depends, HTTPException, Cookie, Response, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -11,6 +12,7 @@ from.auth import SECRET_KEY, REFRESH_SECRET_KEY, create_access_token, create_ref
 from .zarinPalAPI import SendInformation, InformationData
 from urllib.parse import urlparse, parse_qs
 from .private import ADMIN_CHAT_IDs, telegram_bot_token
+from sqlalchemy import delete
 
 verification_codes = {}
 price_per_gb, price_per_day = 1500, 500
@@ -328,7 +330,7 @@ async def crypto_initialization_payment(database, user_id, amount, action, id_ho
 
 
 @app.post('/payment/')
-async def payment( request: Request, payment_method: str = Form(...), db: Session = Depends(get_db)):
+async def payment(request: Request, payment_method: str = Form(...), db: Session = Depends(get_db)):
     try:
         action = 'cart_payment'
         user_id = await decode_access_token(request)
@@ -342,6 +344,8 @@ async def payment( request: Request, payment_method: str = Form(...), db: Sessio
             if not get_data: return {'status': 'the invoice was not created'}
             return RedirectResponse(f'https://payment.zarinpal.com/pg/StartPay/{get_data.authority}')
         else:
+            if amount < 10000:
+                return {'error', 'crypto getway available for cart with amount than $0.20'}
             link = await crypto_initialization_payment(
                 database=db, user_id=user_id, amount=amount, action=action, id_holder=db_cart.cart_id
             )
@@ -371,6 +375,16 @@ async def verify_iran_payment(authority: str, amount: int):
 
     return response
 
+async def verify_cryptomus_payment(order_id: str, uuid_: str | None):
+    check_invoic = await cryptomusApi.InvoiceInfo(private.cryptomus_api_key, private.cryptomus_merchant_id).execute(order_id, uuid_)
+
+    if check_invoic:
+        payment_status = check_invoic.get('result', {}).get('payment_status')
+        if payment_status in ('paid', 'paid_over'): return check_invoic[0]
+
+    # return False
+
+
 def second_to_ms(date, time_to_ms: bool = True):
     if time_to_ms:
         return int(date.timestamp() * 1000)
@@ -386,7 +400,7 @@ def traffic_to_gb(traffic, byte_to_gb:bool = True):
 
 
 def generate_random_string(length=5):
-    characters = string.ascii_letters + string.digits  # ترکیبی از حروف و اعداد
+    characters = string.ascii_letters + string.digits
     random_string = ''.join(random.choice(characters) for _ in range(length))
     return random_string
 
@@ -442,8 +456,7 @@ async def upgrade_service_in_server(service, database, user_id):
             update_client = connect_to_server_instance.api_operation.update_client(client_id, data, get_server_domain)
 
             print(update_client)
-
-            crud.renew_service_suuccessfull(database, service.config_id, traffic, my_data)
+            crud.renew_service_suuccessfull(database, service.config_id, traffic_to_gb(traffic), second_to_ms(my_data, False).day)
 
             await report_status_to_admin(
                 text=f'🕸️ User Upgrade Service [WEB SERVER]'
@@ -487,6 +500,7 @@ async def create_new_service_for_user(service, database, user_id):
             config_key, config_email, traffic_to_gigabyte, time_to_ms)
     }
     connect_to_server_instance.api_operation.add_client(data, service.product.server_address)
+
     check_servise_available = connect_to_server_instance.api_operation.get_client(
         config_email, domain=service.product.server_address)
 
@@ -514,30 +528,27 @@ async def create_new_service_for_user(service, database, user_id):
 
 @app.get('/iran_recive_payment_result/')
 async def recive_payment_result(Authority: str, Status: str, request: Request, db: Session = Depends(get_db)):
-
     if Status == 'OK':
         try:
+
             with db.begin():
                 get_from_data = crud.get_payment_detail_by_authority(db, Authority)
+
                 if not get_from_data:
                     return templates.TemplateResponse(request=request, name='cart/fail_pay.html',
-                                                      context={'error_reason': f'تراکنش مورد نظر در دیتابیس ما وجود ندارد. آیدی تراکنش {Authority}', 'error_code': 403})
-                amount, payment_action = get_from_data.amount, get_from_data.action
+                                                      context={
+                                                          'error_reason': f'تراکنش مورد نظر در دیتابیس ما وجود ندارد. آیدی تراکنش {Authority}',
+                                                          'error_code': 403})
                 user_id: int = get_from_data.owner_id
+                get_cart = crud.get_cart(db, user_id)
+
+                amount = get_from_data.amount
                 cart_id: int = get_from_data.id_holder
 
-                # response = await verify_iran_payment(Authority, amount)
+                response = await verify_iran_payment(Authority, amount)
                 response = {'data': {"code": 100, 'ref_id': 214214214}}
 
-                if response.get('data', {}).get('code', 101) == 100:
-                    # ref_id = response.get('data').get('ref_id')
-                    get_cart = crud.get_cart(db, user_id)
-
-                    cart_item = db.query(models.CartV2RayConfigAssociation).filter(
-                        models.CartV2RayConfigAssociation.cart_id == cart_id).first()
-
-                    if cart_item:
-                        db.delete(cart_item)
+                if response.get('data', {}).get('code', 100) == 100:
 
                     for service in get_cart.v2ray_config_associations:
                         if service.v2ray_config.update:
@@ -547,24 +558,80 @@ async def recive_payment_result(Authority: str, Status: str, request: Request, d
 
                         for _ in range(service_count):
                             create = await create_new_service_for_user(service.v2ray_config, db, user_id)
-                            if not create: raise ValueError('config is not available in server')
+                            if not create:
+                                raise ValueError('config is not available in server')
 
+                    db.query(models.CartV2RayConfigAssociation).filter(models.CartV2RayConfigAssociation.cart_id == cart_id).delete()
                     return RedirectResponse('/dashboard/?payment_status=1')
+
+        except Exception as e:
+
+            db.rollback()
+            try:
+                get_cart = crud.get_cart(db, user_id)
+                price = await calculate_total_price(get_cart.v2ray_config_associations)
+                crud.add_credit_to_user(db, user_id, price)
+            except NameError:
+                price = 0
+
+            await report_status_to_admin(
+                text=f'🕸️ User Service Buy Faild And Return Credit To wallet [WEB APP ZarinPal]'
+                     f'\nAuthority: {Authority}'
+                     f'\nError: {type(e)}\n{str(e)}',
+                user_id=user_id)
+            return RedirectResponse('/dashboard/?payment_status=2')
+
+
+@app.post('/crypto_recive_payment_result/')
+async def crypto_recive_payment_result(data: schemas.CryptomusPaymentWebhook, db: Session = Depends(get_db)):
+
+    if data.status in ['paid', 'paid_over']:
+
+        with db.begin():
+
+            get_from_db = crud.get_crypto_payment_detail_by_order_id(db, data.order_id)
+            print(get_from_db.owner_id)
+            if not get_from_db: return
+
+            user_id: int = get_from_db.owner_id
+            get_cart = crud.get_cart(db, user_id)
+
+            print(get_cart.cart_id)
+
+        try:
+            cart_id: int = get_from_db.id_holder
+            response = await verify_cryptomus_payment(get_from_db.order_id, None)
+
+            if response:
+                # ref_id = response.get('data').get('ref_id')
+
+                db.query(models.CartV2RayConfigAssociation).filter(models.CartV2RayConfigAssociation.cart_id == cart_id).delete()
+
+                for service in get_cart.v2ray_config_associations:
+                    print(service.v2ray_config.plan_name)
+                    if service.v2ray_config.update:
+                        await upgrade_service_in_server(service.v2ray_config, db, user_id)
+
+                    service_count = service.count
+
+                    for _ in range(service_count):
+                        create = await create_new_service_for_user(service.v2ray_config, db, user_id)
+                        if not create: raise ValueError('config is not available in server')
+
+                db.query(models.CartV2RayConfigAssociation).filter(models.CartV2RayConfigAssociation.cart_id == cart_id).delete()
+                return {'ok': 'ok'}
 
         except Exception as e:
             db.rollback()
             price = await calculate_total_price(get_cart.v2ray_config_associations)
             crud.add_credit_to_user(db, user_id, price)
             await report_status_to_admin(
-                text=f'🕸️ User Service Buy Faild And Return Credit To wallet [WEB APP]'
-                     f'\nService ID: {service.config_id}'
-                     f'\nService Name: {service.plan_name}'
-                     f'\nTraffic: {service.traffic_gb}GB'
-                     f'\nPeriod: {service.period_day}day'
-                     f'\nAmount: {service.price:,}'
+                text=f'🕸️ User Service Buy Faild And Return Credit To wallet [WEB APP Cryptomus]'
+                     f'\ndata: \n{data}'
                      f'\nError: {type(e)}\n{str(e)}',
                 user_id=user_id)
-            return RedirectResponse('/dashboard/?payment_status=2')
+
+            return {'ok': 'nok'}
 
 
 async def get_server_details(all_services):
@@ -691,6 +758,7 @@ async def upgrade_foreign_service(config: schemas.UpgradeCustomService, request:
             cart_id = crud.get_cart(db, user_id)
 
             traffic, period = config.traffic, config.period
+            print(traffic, period)
             calcuate_price = (price_per_gb * config.traffic) + (price_per_day * config.period)
             parsed_url = urlparse(config.config_address)
 
@@ -713,28 +781,37 @@ async def upgrade_foreign_service(config: schemas.UpgradeCustomService, request:
             )
 
             match_product = crud.check_any_product_match(db, create_schema)
+
             if not match_product:
-                return HTTPException(404, {'status': 'nok', 'message': 'there is no match product'})
+                return {'status': 'notExist', 'message': 'there is no match product'}
 
             get_service_detail = connect_to_server_instance.api_operation.get_client(
                 email,
                 match_product.server_address
             )
-
             if get_service_detail.get('success', False):
                 obj = get_service_detail.get('obj', {})
                 if obj:
                     inbound_id = obj.get('inboundId')
                     if inbound_id:
-                        create_config_schema = schemas.CreateConfigInDB(
-                            plan_name='خارجی', config_key=key, config_email=email, traffic_gb=traffic,
-                            period_day=period, price=calcuate_price, active=False, product_id=match_product.product_id,
-                            owner_id=user_id, client_address=config.config_address, inbound_id=inbound_id, update=True
-                        )
-                        service = crud.create_config(db, create_config_schema, commit=False)
-                        db.flush()
+                        service = crud.get_config_by_email(db, email, user_id)
+                        if service:
+                            crud.update_config_traffic_and_period(db, service.config_id, traffic, period, calcuate_price)
+                        else:
+                            create_config_schema = schemas.CreateConfigInDB(
+                                plan_name='خارجی', config_key=key, config_email=email, traffic_gb=traffic,
+                                period_day=period, price=calcuate_price, active=False, product_id=match_product.product_id,
+                                owner_id=user_id, client_address=config.config_address, inbound_id=inbound_id, update=True
+                            )
+                            service = crud.create_config(db, create_config_schema, commit=False)
+                            db.flush()
+
                         crud.add_to_cart(db, cart_id.cart_id, service.config_id, commit=False)
 
+                        return {'status': 'ok'}
+
+    except sqlalchemy.exc.IntegrityError:
+        return {'status': 'alreadyExist'}
+
     except Exception as e:
-        db.rollback()
         return {'status': 'error', 'reason': str(e)}

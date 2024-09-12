@@ -137,9 +137,13 @@
 
             <!-- زبانه‌های پرداخت -->
             <ul class="nav nav-tabs" id="paymentTabs" role="tablist" style="padding-right: 0;margin-top: 25px;">
+                {% if price > 10000 %}
+
                 <li class="nav-item">
                     <a style="padding: 7px;" class="nav-link" id="crypto-tab" data-toggle="tab" href="#crypto" role="tab" aria-controls="crypto" aria-selected="true">پرداخت با کریپتو</a>
                 </li>
+
+                {% endif %}
                 <li class="nav-item">
                     <a class="nav-link active" id="card-tab" data-toggle="tab" href="#card" role="tab" aria-controls="card" aria-selected="false">کارت‌بانکی</a>
                 </li>
@@ -159,7 +163,7 @@
                 <div class="tab-pane fade" id="crypto" role="tabpanel" aria-labelledby="crypto-tab">
                     <form style="padding:0;" class="GoToPay">
                         <p>شما میتوانید با استفاده از درگاه پرداخت کریپتو پرداخت خودتون رو انجام بدید.
-                            بعد از پرداخت به سایت برمیگردید و سرویس رو دریافت میکنید
+                            بعد از پرداخت به سایت برمیگردید و سرویس رو دریافت میکنید.
                         </p>
                         <input type="hidden" class="payment-method" value="crypto_payment_getway">
                         <input type="submit" class="btn btn-primary" style="margin-top: 10px;" value="پرداخت با کریپتو">

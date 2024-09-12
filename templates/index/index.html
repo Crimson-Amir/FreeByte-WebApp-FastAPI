@@ -218,11 +218,8 @@
     <div class="container">
       <div class="row justify-content-center" id="custom-and-upgrade">
 
-        <!-- فرم خرید سرویس -->
-        <div class="col-12 col-md-6 col-lg-5 my-4">
-          <div class="card h-100">
+        <form id="buy-custom-service-form" class="buy-custom-service-form card-body d-flex flex-column justify-content-around mx-auto col-12 col-md-6 col-lg-5 my-4 card h-100">
 
-            <form id="buy-custom-service-form" class="buy-custom-service-form card-body d-flex flex-column justify-content-around mx-auto">
               <h2 class="text-900 vazir_medium pb-4 mt-4">سرویس مورد نظر خودتون رو بسازید:</h2>
               <div class="slider-container">
                 <label for="time-period" class="slider-label vazir_medium">
@@ -245,20 +242,18 @@
               <input class="btn btn-outline-danger rounded-pill vazir_medium" type="submit" value="خرید">
               {% else %}
               <a class="btn btn-outline-danger rounded-pill vazir_medium" href="/sign-up/">ثبت نام</a>
-            </form>
 
-            {% endif %}
-          </div>
-        </div>
+              {% endif %}
 
-        <!-- فرم وارد کردن دستی و آدرس سرویس -->
-        <div class="col-12 col-md-6 col-lg-5 my-4">
-          <div id="upgrade-service" class="card h-100">
-            <h2 class="text-900 vazir_medium mt-5" style="text-align: center;">سرویس خارج از سایت رو ارتقا بدید:</h2>
-            <div class="tab-content" id="serviceTabsContent" style="padding: 1rem;">
-              <!-- Manual Entry Tab -->
-              <div class="tab-pane fade show active" id="manual-entry" role="tabpanel" aria-labelledby="manual-entry-tab">
-                <form id="manual-entry-form" class="manual-entry-form card-body d-flex flex-column mx-auto">
+        </form>
+
+
+        <form id="manual-entry-form" class="buy-custom-service-form card-body d-flex flex-column justify-content-around mx-auto card h-100">
+
+              <h2 class="text-900 vazir_medium mt-5" style="text-align: center;">سرویس خارج از سایت رو ارتقا بدید:</h2>
+              <div class="tab-content" id="serviceTabsContent" style="padding: 1rem;">
+                <!-- Manual Entry Tab -->
+                <div class="tab-pane fade show active" id="manual-entry" role="tabpanel" aria-labelledby="manual-entry-tab">
                   <div class="mb-3">
                     <label for="client_address" class="client_address form-label vazir_medium">آدرس کلاینت</label>
                     <input type="text" id="client_address" class="client_address form-control">
@@ -291,13 +286,12 @@
                   <input class="btn btn-primary rounded-pill vazir_medium" style="width: 100%;" type="submit" value="خرید">
                   {% else %}
                   <a class="btn btn-outline-danger rounded-pill vazir_medium" href="/sign-up/">ثبت نام</a>
-                </form>
+                </div>
               </div>
-            </div>
 
-            {% endif %}
-          </div>
-        </div>
+              {% endif %}
+
+        </form>
 
       </div>
     </div>
@@ -322,9 +316,6 @@
   </section>
   <!-- <section> close ============================-->
   <!-- ============================================-->
-
-
-
 
   <!-- ============================================-->
   <!-- <section> begin ============================-->
@@ -523,15 +514,16 @@
   });
 
 
-    document.querySelectorAll('.manual-entry-form').forEach(form => {
+    document.querySelectorAll('#manual-entry-form').forEach(form => {
       form.addEventListener('submit', event => {
           event.preventDefault();
           console.log('Form submitted');
 
-          const traffic = form.querySelector('.manual-traffic').value;
-          const period = form.querySelector('.manual-period').value;
-          const client_address = form.querySelector('.client_address').value;
-          const client_country = form.querySelector('.client-country').value;
+          const traffic = form.querySelector('#manual-traffic').value;
+          const period = form.querySelector('#manual-period').value;
+          const client_address = form.querySelector('#client_address').value;
+          const client_country = form.querySelector('#client-country').value;
+
 
           fetch('/upgrade-foreign-service/', {
               method: 'POST',
@@ -542,15 +534,19 @@
                   config_address: client_address,
                   country: client_country,
                   traffic: traffic,
-                  period: period,
+                  period: period
               }),
           })
           .then(response => response.json())
           .then(data => {
+              console.log('Traffic:', data);
+
               if (data.status === 'ok') {
                   showTemporaryMessage('سفارش با موفقیت به سبد خرید اضافه شد!', 'success');
-              } else if (data.status === 'error') {
-                  showTemporaryMessage('مشکلی در ارسال درخواست وجود داشت!', 'error');
+              } else if (data.status === 'notExist') {
+                  showTemporaryMessage('سرویس مورد نظر شما در سرور یافت نشد!', 'error');
+              } else if (data.status === 'alreadyExist') {
+                  showTemporaryMessage('شما قبلا این سرویس رو به سبد خرید اضافه کردید!', 'error');
               } else {
                   showTemporaryMessage('جواب غیرمنتظره از سرور دریافت شد', 'error');
               }
@@ -588,7 +584,7 @@
 
 
   document.addEventListener('DOMContentLoaded', () => {
-    // انتخاب عناصر مختلف برای استفاده در محاسبات
+
     const timePeriodSlider = document.getElementById('time-period');
     const trafficSlider = document.getElementById('traffic');
     const timePeriodInput = document.getElementById('time-period-input');
