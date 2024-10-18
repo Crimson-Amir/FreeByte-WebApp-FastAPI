@@ -67,18 +67,18 @@
                     <div class="col align-self-center text-left text-muted item_holder">{{ list_len }} آیتم</div>
                 </div>
             </div>
-            {% if db_cart.v2ray_config_associations %}
-            {% for config in db_cart.v2ray_config_associations %}
+            {% if db_cart.purchase_associations %}
+            {% for purchase_db in db_cart.purchase_associations %}
             <div>
                 <div class="row border-top border-bottom" style="margin-right: 0;">
                     <div class="row main align-items-center" style="margin-right: 0;">
-                        {% if config.v2ray_config.update %}
+                        {% if purchase_db.purchase.update %}
 
                         <div class="col" style="padding-right: 20px; max-width: 16%;">
                             <div class="row text-muted">
                                 تمدید سرویس
                             </div>
-                            <div class="row">شماره {{ config.v2ray_config.config_email }}</div>
+                            <div class="row">شماره {{ purchase_db.purchase.username }}</div>
                         </div>
 
                         <div class="col" style="max-width: 23%;">
@@ -90,26 +90,26 @@
                             <div class="row text-muted">
                                 خرید سرویس
                             </div>
-                            <div class="row">پلن {{ config.v2ray_config.plan_name }}</div>
+                            <div class="row">پلن {{ purchase_db.purchase.plan_name }}</div>
                         </div>
 
                         <div class="col" style="max-width: 23%;">
-                            <a href="#" class="increment" data-config-id="{{ config.v2ray_config.config_id }}" data-cart-id="{{ db_cart.cart_id }}">+</a>
-                            <a href="#" class="border" id="count-{{ config.v2ray_config.config_id }}">{{ config.count }}</a>
-                            <a href="#" class="decrement" data-config-id="{{ config.v2ray_config.config_id }}" data-cart-id="{{ db_cart.cart_id }}">-</a>
+                            <a href="#" class="increment" data-purchase-id="{{ purchase_db.purchase.purchase_id }}" data-cart-id="{{ db_cart.cart_id }}">+</a>
+                            <a href="#" class="border" id="count-{{ purchase_db.purchase.purchase_id }}">{{ purchase_db.count }}</a>
+                            <a href="#" class="decrement" data-purchase-id="{{ purchase_db.purchase.purchase_id }}" data-cart-id="{{ db_cart.cart_id }}">-</a>
                         </div>
                         {% endif %}
 
                         <div class="col" style="max-width: 28%;">
-                            <div class="row">مدت زمان: {{ config.v2ray_config.period_day }} روز</div>
-                            <div class="row">ترافیک: {{ config.v2ray_config.traffic_gb }} گیگابایت</div>
+                            <div class="row">مدت زمان: {{ purchase_db.purchase.period }} روز</div>
+                            <div class="row">ترافیک: {{ purchase_db.purchase.traffic }} گیگابایت</div>
                         </div>
                         <div class="col" style="display: flex; justify-content: space-around; justify-content: space-between; max-width: 31%;align-items: center;">
-                            <div>
-                                {{ config.v2ray_config.price }} تومان
+                            <div id="price">
+                                {{ purchase_db.purchase.price }} تومان
                             </div>
                             <form class="buy-service-form">
-                                <input type="hidden" name="config_id" class="config_id-input" value="{{ config.v2ray_config.config_id }}">
+                                <input type="hidden" name="purchase_id" class="purchase_id-input" value="{{ purchase_db.purchase.purchase_id }}">
                                 <input type="hidden" name="cart_id" class="cart_id-input" value="{{ db_cart.cart_id }}">
                                 <input type="submit" class="close" style="margin-left: 0;" value="&#10005;">
                             </form>
@@ -138,12 +138,17 @@
             <!-- زبانه‌های پرداخت -->
             <ul class="nav nav-tabs" id="paymentTabs" role="tablist" style="padding-right: 0;margin-top: 25px;">
                 {% if price > 10000 %}
-
                 <li class="nav-item">
                     <a style="padding: 7px;" class="nav-link" id="crypto-tab" data-toggle="tab" href="#crypto" role="tab" aria-controls="crypto" aria-selected="true">پرداخت با کریپتو</a>
                 </li>
-
                 {% endif %}
+
+                {% if db_cart.owner.credit >= price %}
+                <li class="nav-item">
+                    <a style="padding: 7px;" class="nav-link" id="wallet-tab" data-toggle="tab" href="#wallet" role="tab" aria-controls="wallet" aria-selected="true">پرداخت با اعتبار کیف پول</a>
+                </li>
+                {% endif %}
+
                 <li class="nav-item">
                     <a class="nav-link active" id="card-tab" data-toggle="tab" href="#card" role="tab" aria-controls="card" aria-selected="false">کارت‌بانکی</a>
                 </li>
@@ -169,6 +174,15 @@
                         <input type="submit" class="btn btn-primary" style="margin-top: 10px;" value="پرداخت با کریپتو">
                     </form>
                 </div>
+
+                <div class="tab-pane fade" id="wallet" role="tabpanel" aria-labelledby="wallet-tab">
+                    <form style="padding:0;" class="GoToPay">
+                        <p>اعتبار کیف پول شما برای انجام این عملیات کافی است، میتوانید از این طریق پرداخت را انجام دهید</p>
+                        <input type="hidden" class="payment-method" value="pay_by_wallet">
+                        <input type="submit" class="btn btn-primary" style="margin-top: 10px;" value="پرداخت با اعتبار">
+                    </form>
+                </div>
+
             </div>
 
         </div>
@@ -179,28 +193,52 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    document.querySelectorAll('.increment').forEach(button => {
+
+
+
+function formatPrice(price) {
+    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    var priceElement = document.getElementById('price');
+    if (priceElement) {
+        var priceText = priceElement.innerHTML;
+        var numberOnly = priceText.replace(/[^\d]/g, '');
+        var formattedPrice = formatPrice(numberOnly);
+        priceElement.innerHTML = formattedPrice + " تومان";
+    }
+
+    var summaryPriceElement = document.querySelector('.summary .summary_price');
+    if (summaryPriceElement) {
+        var priceText = summaryPriceElement.innerHTML;
+        var numberOnly = priceText.replace(/[^\d]/g, '');
+        var formattedPrice = formatPrice(numberOnly);
+        summaryPriceElement.innerHTML = formattedPrice + " تومان";
+    }
+});
+
+
+document.querySelectorAll('.increment').forEach(button => {
     button.addEventListener('click', event => {
         event.preventDefault();
-        const configId = button.getAttribute('data-config-id');
-        const cartId = button.getAttribute('data-cart-id');
+        const purchaseID = button.getAttribute('data-purchase-id');
 
-        fetch('/add_config_count/', {
+        fetch('/add_purchase_count_in_cart/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ config_id: configId, cart_id: cartId })
+            body: JSON.stringify({ purchase_id: purchaseID })
         })
         .then(response => response.json())
         .then(data => {
             if (data.status === 'ok') {
-                const countElement = document.getElementById(`count-${configId}`);
+                const countElement = document.getElementById(`count-${purchaseID}`);
                 countElement.textContent = parseInt(countElement.textContent) + 1;
 
-                // بروزرسانی قیمت کل
                 const totalPriceElement = document.querySelector('.summary .summary_price');
-                totalPriceElement.textContent = `${data.new_price} تومان`;
+                totalPriceElement.textContent = `${formatPrice(data.new_price)} تومان`;
             }
         })
         .catch(error => {
@@ -212,19 +250,18 @@
 document.querySelectorAll('.decrement').forEach(button => {
     button.addEventListener('click', event => {
         event.preventDefault();
-        const configId = button.getAttribute('data-config-id');
-        const cartId = button.getAttribute('data-cart-id');
+        const purchaseID = button.getAttribute('data-purchase-id');
 
-        const countElement = document.getElementById(`count-${configId}`);
+        const countElement = document.getElementById(`count-${purchaseID}`);
         const currentCount = parseInt(countElement.textContent);
 
         if (currentCount > 1) {
-            fetch('/subtract_config_count/', {
+            fetch('/subtract_purchase_count_in_cart/', {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ config_id: configId, cart_id: cartId })
+                body: JSON.stringify({ purchase_id: purchaseID })
             })
             .then(response => response.json())
             .then(data => {
@@ -232,7 +269,7 @@ document.querySelectorAll('.decrement').forEach(button => {
                     countElement.textContent = currentCount - 1;
 
                     const totalPriceElement = document.querySelector('.summary .summary_price');
-                    totalPriceElement.textContent = `${data.new_price} تومان`;
+                    totalPriceElement.textContent = `${formatPrice(data.new_price)} تومان`;
                 }
             })
             .catch(error => {
@@ -249,10 +286,10 @@ document.querySelectorAll('.buy-service-form').forEach(form => {
     form.addEventListener('submit', event => {
         event.preventDefault();
 
-        const configId = form.querySelector('.config_id-input').value;
+        const purchaseID = form.querySelector('.purchase_id-input').value;
         const cartId = form.querySelector('.cart_id-input').value;
 
-        fetch(`/remove_from_cart/${cartId}/${configId}`, {
+        fetch(`/remove_from_cart/${cartId}/${purchaseID}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -266,7 +303,7 @@ document.querySelectorAll('.buy-service-form').forEach(form => {
                 const ItemHolder = document.querySelector('.item_holder');
                 ItemHolder.textContent = `${data.new_item_count} آیتم`;
                 const totalPriceElement = document.querySelector('.summary .summary_price');
-                totalPriceElement.textContent = `${data.new_price} تومان`;
+                totalPriceElement.textContent = `${formatPrice(data.new_price)} تومان`;
             } else {
                 showTemporaryMessage('مشکلی در ثبت درخواست وجود داشت!', 'error');
             }
@@ -313,7 +350,7 @@ document.querySelectorAll('.GoToPay').forEach(form => {
         event.preventDefault();
         console.log('Form submitted');
 
-        const payment_method = form.querySelector('.payment-method').value;
+        const payment_gateway = form.querySelector('.payment-method').value;
 
         const hiddenForm = document.createElement('form');
         hiddenForm.method = 'POST';
@@ -321,8 +358,8 @@ document.querySelectorAll('.GoToPay').forEach(form => {
 
         const hiddenInput = document.createElement('input');
         hiddenInput.type = 'hidden';
-        hiddenInput.name = 'payment_method';
-        hiddenInput.value = payment_method;
+        hiddenInput.name = 'payment_gateway';
+        hiddenInput.value = payment_gateway;
 
         hiddenForm.appendChild(hiddenInput);
         document.body.appendChild(hiddenForm);

@@ -31,15 +31,15 @@
         {% if all_services %}
 
         {% for service in all_services %}
-        {% if service_detail_from_server.get(service.config_email) %}
+        {% if service_detail_from_server.get(service.username) %}
 
-        <div class="service-card" data-percentage="{{ service_detail_from_server[service.config_email]['usage_percent'] }}">
+        <div class="service-card" data-percentage="{{ service_detail_from_server.get(service.username, {}).get('usage_percent') }}">
             <div class="service-details">
                 <div class="service-info">
 
-                    <h3 style="{% if not service_detail_from_server[service.config_email]['enable'] %} color: red; {% endif %}">سرویس {{service.plan_name}} شماره {{service.config_id}}</h3>
-                    <p>زمان باقی‌مانده: {{ service_detail_from_server[service.config_email]['left_day'] }} روز</p>
-                    <p>حجم باقی‌مانده: {{ service_detail_from_server[service.config_email]['left_traffic'] }} گیگابایت</p>
+                    <h3 style="{% if not service_detail_from_server.get(service.username, {}).get('enable') %} color: red; {% endif %}">سرویس {{service.plan_name}} {{service.username}}</h3>
+                    <p>زمان باقی‌مانده: {{ service_detail_from_server.get(service.username, {}).get('left_day') }} روز</p>
+                    <p>حجم باقی‌مانده: {{ service_detail_from_server.get(service.username, {}).get('left_traffic') }} گیگابایت</p>
                 </div>
 
                 <div class="progress-circle">
@@ -55,9 +55,9 @@
                 <div class="service-card">
                     <div class="service-details">
                         <div class="service-info">
-                            <h3 style="{% if not service.service_status %} color: red; {% endif %}">سرویس {{service.plan_name}} شماره {{service.config_id}}</h3>
-                            <p>دوره زمانی: {{service.period_day}} روز</p>
-                            <p>ترافیک سرویس: {{service.traffic_gb}} گیگابایت</p>
+                            <h3 style="{% if not service.service_status %} color: red; {% endif %}">سرویس {{service.plan_name}} شماره {{service.purchase_id}}</h3>
+                            <p>دوره زمانی: {{service.period}} روز</p>
+                            <p>ترافیک سرویس: {{service.traffic}} گیگابایت</p>
 
                         </div>
 
@@ -66,23 +66,23 @@
 
                     </div>
                     <div class="actions">
-                        {% if not service_detail_from_server.get(service.config_email, {}).get("error") %}
-                        <input type="text" id="hiddenConfigAddress" value="{{ service.client_address }}" style="position: absolute; left: -9999px;">
+                        {% if not service_detail_from_server.get(service.username, {}).get("error") %}
+                        <input type="text" id="hiddenConfigAddress" value="{{ service.product.main_server.server_protocol }}{{ service.product.main_server.server_ip }}:{{ service.product.main_server.server_port }}{{ service.subscription_url }}" style="position: absolute; left: -9999px;">
                         <button class="widt-175px" style="margin-left: 10px;" onclick="copyToClipboard()">دریافت لینک سرویس</button>
 
                         <form class="renew_service">
-                            <input type="hidden" class="config_id-input" value="{{ service.config_id }}">
+                            <input type="hidden" class="config_id-input" value="{{ service.purchase_id }}">
                             <input type="submit" class="widt-175px" style="margin-left: 10px;" value="تمدید سرویس">
                         </form>
 
                         <form class="remove_service">
-                            <input type="hidden" class="config_id-input" value="{{ service.config_id }}">
+                            <input type="hidden" class="config_id-input" value="{{ service.purchase_id }}">
                             <input type="submit" class="widt-175px" style="margin-left: 10px;" value="حذف سرویس">
                         </form>
                         {% else %}
 
-                        {% if service_detail_from_server.get(service.config_email) %}
-                        <div style="color: red;">Error: {{ service_detail_from_server[service.config_email]["error"] }}</div>
+                        {% if service_detail_from_server.get(service.username) %}
+                        <div style="color: red;">Error: {{ service_detail_from_server.get(service.username, {}).get("error") }}</div>
                         {% endif %}
 
                         {% endif %}
@@ -246,7 +246,6 @@ var dropdownMenu = document.getElementById("dropdownMenu");
 dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
 });
 
-// بستن منو اگر در جای دیگری کلیک شد
 window.addEventListener("click", function(event) {
 if (!event.target.matches('.user-name-button')) {
     var dropdowns = document.getElementsByClassName("dropdown-menu");

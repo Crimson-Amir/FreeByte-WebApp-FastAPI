@@ -5,7 +5,7 @@ from datetime import datetime
 
 
 class User(Base):
-    __tablename__ = 'UserDetail'
+    __tablename__ = 'user_detail'
 
     user_id = Column(Integer, primary_key=True)
     email = Column(String, unique=True)
@@ -17,112 +17,99 @@ class User(Base):
 
     credit = Column(Integer, default=0)
 
-    config = relationship("V2RayConfig", back_populates="owner")
-    cart = relationship("Cart", back_populates="owner")
+    purchases = relationship("Purchase", back_populates="owner", cascade="all, delete-orphan")
+    cart = relationship("Cart", back_populates="owner", cascade="all, delete-orphan")
+    financial_reports = relationship("FinancialReport", back_populates="owner", cascade="all, delete-orphan")
 
-    iran_payments = relationship("IranPaymentGewayInvoice", back_populates="owner")
-    cryptomus_payments = relationship("CryptomusPaymentGewayInvoice", back_populates="owner")
-
-class Product(Base):
-    __tablename__ = 'Product'
-
-    product_id = Column(Integer, primary_key=True, autoincrement=True)
-    country = Column(String)
-    protocol = Column(String, nullable=False)
-    server_address = Column(String, nullable=False)
-    iran_domain_address = Column(String, nullable=False)
-    server_port = Column(Integer, nullable=False)
-    encryption = Column(String, default='none')
-    security = Column(String, default='none')
-    network_type = Column(String, default='tcp')
-    header_type = Column(String, default='http')
-    header_host = Column(String, default='')
-    active = Column(Boolean, default=True)
-    register_date = Column(DateTime, default=datetime.now())
-
-    v2ray_config = relationship("V2RayConfig", back_populates="product")
 
 class Cart(Base):
-    __tablename__ = 'Cart'
+    __tablename__ = 'cart'
 
     cart_id = Column(Integer, primary_key=True, autoincrement=True)
-    owner_id = Column(Integer, ForeignKey('UserDetail.user_id'))
+    owner_id = Column(Integer, ForeignKey('user_detail.user_id'))
     owner = relationship("User", back_populates="cart")
 
-    v2ray_config_associations = relationship("CartV2RayConfigAssociation", back_populates="cart", cascade="all, delete-orphan")
+    purchase_associations = relationship("CartPurchaseAssociation", back_populates="cart", cascade="all, delete-orphan")
 
-class V2RayConfig(Base):
-    __tablename__ = 'v2ray_config'
 
-    config_id = Column(Integer, primary_key=True, autoincrement=True)
-    plan_name = Column(String)
-    config_key = Column(String, unique=True)
-    config_email = Column(String, unique=True)
-    inbound_id = Column(Integer)
-    traffic_gb = Column(Integer)
-    period_day = Column(Integer)
-    price = Column(Integer)
-    active = Column(Boolean, default=True)
-    service_status = Column(Boolean, default=True)
+class CartPurchaseAssociation(Base):
+    __tablename__ = 'cart_purchase_association'
+    cart_id = Column(Integer, ForeignKey('cart.cart_id'), primary_key=True)
+    purchase_id = Column(Integer, ForeignKey('purchase.purchase_id', ondelete='CASCADE'), primary_key=True)
+    count = Column(Integer, default=1)
 
-    update = Column(Boolean, default=False)
-    client_address = Column(String, nullable=True)
+    cart = relationship("Cart", back_populates="purchase_associations")
+    purchase = relationship("Purchase", back_populates="cart_associations")
+
+
+class FinancialReport(Base):
+    __tablename__ = 'financial_report'
+
+    financial_id = Column(Integer, primary_key=True)
+    operation = Column(String, default='spend')
+
+    amount = Column(Integer, nullable=False)
+    action = Column(String, nullable=False)
+    id_holder = Column(Integer)
+
+    payment_getway = Column(String)
+    authority = Column(String)
+    currency = Column(String)
+    url_callback = Column(String)
+    additional_data = Column(String)
+    payment_status = Column(String)
 
     register_date = Column(DateTime, default=datetime.now())
 
-    product_id = Column(Integer, ForeignKey('Product.product_id'))
-    product = relationship("Product", back_populates="v2ray_config")
-
-    owner_id = Column(Integer, ForeignKey('UserDetail.user_id'), nullable=True)
-    owner = relationship("User", back_populates="config")
-
-    cart_associations = relationship("CartV2RayConfigAssociation", back_populates="v2ray_config", cascade="all, delete-orphan")
-
-class CartV2RayConfigAssociation(Base):
-    __tablename__ = 'cart_v2ray_config_association'
-    cart_id = Column(Integer, ForeignKey('Cart.cart_id'), primary_key=True)
-    config_id = Column(Integer, ForeignKey('v2ray_config.config_id', ondelete='CASCADE'), primary_key=True)
-    count = Column(Integer, default=1)
-
-    cart = relationship("Cart", back_populates="v2ray_config_associations")
-    v2ray_config = relationship("V2RayConfig", back_populates="cart_associations")
+    owner_id = Column(BigInteger, ForeignKey('user_detail.user_id'))
+    owner = relationship("User", back_populates="financial_reports")
 
 
-class IranPaymentGewayInvoice(Base):
-    __tablename__ = 'iran_payment_geway_invoice'
+class MainServer(Base):
+    __tablename__ = 'main_server'
+    server_id = Column(Integer, primary_key=True)
+    active = Column(Boolean)
+    server_ip = Column(String)
+    server_protocol = Column(String)
+    server_port = Column(Integer)
+    server_username = Column(String)
+    server_password = Column(String)
+    products = relationship("Product", back_populates="main_server")
 
-    invoice_id = Column(Integer, primary_key=True, autoincrement=True)
-    action = Column(String)
-    id_holder = Column(Integer, nullable=False)
-    authority = Column(String, nullable=False)
-    amount = Column(Integer, nullable=False)
-    currency = Column(String, default='IRT')
-    callback_url = Column(String, nullable=False)
-    description = Column(String, nullable=False)
-    meta_data = Column(String, nullable=True)
-    is_final = Column(Boolean)
-    fee_type = Column(String)
-    fee = Column(Integer)
+class Product(Base):
+    __tablename__ = 'product'
 
-    owner_id = Column(Integer, ForeignKey('UserDetail.user_id'))
-    owner = relationship("User", back_populates="iran_payments")
+    product_id = Column(Integer, primary_key=True)
+    active = Column(Boolean)
+    product_name = Column(String)
+    register_date = Column(DateTime, default=datetime.now())
+    purchase = relationship("Purchase", back_populates="product")
+
+    main_server_id = Column(Integer, ForeignKey('main_server.server_id'))
+    main_server = relationship("MainServer", back_populates="products")
 
 
-class CryptomusPaymentGewayInvoice(Base):
-    __tablename__ = 'cryptomus_payment_geway_invoice'
+class Purchase(Base):
+    __tablename__ = 'purchase'
 
-    invoice_id = Column(Integer, primary_key=True, autoincrement=True)
-    amount = Column(String, nullable=False)
-    action = Column(String)
-    id_holder = Column(Integer, nullable=False)
-    currency = Column(String)
-    lifetime = Column(Integer)
-    order_id = Column(String, nullable=False)
-    callback_url = Column(String, nullable=False)
-    is_payment_multiple = Column(Boolean, default=True)
-    additional_data = Column(String)
-    is_refresh = Column(Boolean, default=True)
-    is_final = Column(Boolean)
+    purchase_id = Column(Integer, primary_key=True)
+    plan_name = Column(String)
+    username = Column(String)
+    active = Column(Boolean)
+    status = Column(String)
+    traffic = Column(Integer)
+    period = Column(Integer)
+    service_uuid = Column(String)
+    subscription_url = Column(String)
 
-    owner_id = Column(Integer, ForeignKey('UserDetail.user_id'))
-    owner = relationship("User", back_populates="cryptomus_payments")
+    update = Column(Boolean, default=False)
+    price = Column(Integer)
+
+    product_id = Column(Integer, ForeignKey('product.product_id'))
+    product = relationship("Product", back_populates="purchase")
+    owner_id = Column(BigInteger, ForeignKey('user_detail.user_id'))
+    owner = relationship("User", back_populates="purchases")
+
+    register_date = Column(DateTime, default=datetime.now())
+
+    cart_associations = relationship("CartPurchaseAssociation", back_populates="purchase")

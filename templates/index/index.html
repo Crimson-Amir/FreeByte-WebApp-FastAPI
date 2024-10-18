@@ -65,7 +65,7 @@
       <div class="row justify-content-center">
         <div class="col-md-8 col-lg-5 text-center mb-3">
           <h2 class="vazir_medium">پلن خود را انتخاب کنید</h2>
-          <p class="vazir_medium">بیاید سرویسی که برای شما بهترین است را کشف کنیم. اگر سرویس مناسب را پیدا نکردید، میتوانید از <span class="fw-bold">سرویس دلخواه </span> استفاده کنید.</p>
+          <p class="vazir_medium">بیاید سرویسی که برای شما بهترین است را کشف کنیم.</p>
         </div>
       </div>
       <div class="row h-100 justify-content-center">
@@ -91,6 +91,11 @@
                           <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"></path>
                         </svg></span>مدیریت کامل سرویس
                 </li>
+                <li class="mb-3 vazir_medium"><span class="me-2">
+                        <svg class="bi bi-check" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#2FAB73" viewBox="0 0 16 16">
+                          <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"></path>
+                        </svg></span>اتصال مولتی سرور
+                </li>
               </ul>
               <div class="text-center my-5">
                 <h2 class="mb-3 vazir_medium">45,000<span class="text-900">/ماه</span>
@@ -100,7 +105,7 @@
                   <input type="hidden" name="traffic" class="traffic-input" value="20">
                   <input type="hidden" name="period" class="period-input" value="30">
                   <input type="hidden" name="product_id" class="product_id-input" value="1">
-                  <input type="hidden" name="config_id" class="config_id-input" value="1">
+                  <input type="hidden" name="purchase_id" class="purchase_id-input" value="1">
                   <input class="btn btn-outline-danger rounded-pill vazir_medium" type="submit" value="خرید">
                 </form>
                 {% else %}
@@ -135,7 +140,7 @@
                 <li class="mb-3 vazir_medium"><span class="me-2">
                         <svg class="bi bi-check" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#2FAB73" viewBox="0 0 16 16">
                           <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"></path>
-                        </svg></span>نوتیفیکیشن پیامکی رایگان
+                        </svg></span>اتصال مولتی سرور
                 </li>
               </ul>
               <div class="text-center my-5">
@@ -146,7 +151,7 @@
                   <input type="hidden" name="traffic" class="traffic-input" value="30">
                   <input type="hidden" name="period" class="period-input" value="30">
                   <input type="hidden" name="product_id" class="product_id-input" value="1">
-                  <input type="hidden" name="config_id" class="config_id-input" value="2">
+                  <input type="hidden" name="purchase_id" class="purchase_id-input" value="2">
                   <input class="btn btn-outline-danger rounded-pill vazir_medium" type="submit" value="خرید">
                 </form>
                 {% else %}
@@ -181,23 +186,18 @@
                 <li class="mb-3 vazir_medium"><span class="me-2">
                         <svg class="bi bi-check" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#2FAB73" viewBox="0 0 16 16">
                           <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"></path>
-                        </svg></span>نوتیفیکیشن پیامکی رایگان
-                </li>
-                <li class="mb-3 vazir_medium"><span class="me-2">
-                        <svg class="bi bi-check" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#2FAB73" viewBox="0 0 16 16">
-                          <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"></path>
                         </svg></span>اتصال مولتی سرور
                 </li>
               </ul>
               <div class="text-center my-5">
-                <h2 class="mb-3">90,000<span class="text-900 vazir_medium">/ماه</span>
+                <h2 class="mb-3">105,000<span class="text-900 vazir_medium">/ماه</span>
                 </h2>
                 {% if user_data %}
                 <form class="buy-service-form">
                   <input type="hidden" name="traffic" class="traffic-input" value="60">
                   <input type="hidden" name="period" class="period-input" value="30">
                   <input type="hidden" name="product_id" class="product_id-input" value="1">
-                  <input type="hidden" name="config_id" class="config_id-input" value="3">
+                  <input type="hidden" name="purchase_id" class="purchase_id-input" value="3">
                   <input class="btn btn-outline-danger rounded-pill vazir_medium" type="submit" value="خرید">
                 </form>
                 {% else %}
@@ -213,89 +213,70 @@
 
   </section>
 
-
-  <div class="grey-back">
+<div class="grey-back">
     <div class="container">
-      <div class="row justify-content-center" id="custom-and-upgrade">
+        <div class="row justify-content-center">
+            <form id="manual-entry-form" style="padding: 0 10%;" class="buy-custom-service-form card-body d-flex flex-column justify-content-around mx-auto col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5 my-4 card h-100">
+                <h2 class="text-900 vazir_medium mt-5 text-center">سرویس خارج از سایت رو ارتقا بدید:</h2>
+                <div class="tab-content" id="serviceTabsContent" style="padding: 1rem;">
+                    <!-- Manual Entry Tab -->
+                    <div class="tab-pane fade show active" id="manual-entry" role="tabpanel" aria-labelledby="manual-entry-tab">
+                        <!-- Service ID Field -->
+                        <div class="form-group row mb-3">
+                            <label for="client_address" class="col-sm-4 col-form-label vazir_medium text-left">آیدی سرویس (یوزرنیم)</label>
+                            <div class="col-sm-8">
+                                <input type="text" id="client_address" class="form-control" placeholder="آیدی سرویس را وارد کنید">
+                            </div>
+                        </div>
 
-        <form id="buy-custom-service-form" class="buy-custom-service-form card-body d-flex flex-column justify-content-around mx-auto col-12 col-md-6 col-lg-5 my-4 card h-100">
+                        <!-- Traffic and Period Fields -->
+                        <div class="form-group row mb-3">
+                            <label for="manual-traffic" class="col-sm-4 col-form-label vazir_medium text-left">حجم (گیگابایت)</label>
+                            <div class="col-sm-8">
+                                <input type="number" id="manual-traffic" class="form-control" style="width: 100%;" value="1" min="1" max="100">
+                            </div>
+                        </div>
 
-              <h2 class="text-900 vazir_medium pb-4 mt-4">سرویس مورد نظر خودتون رو بسازید:</h2>
-              <div class="slider-container">
-                <label for="time-period" class="slider-label vazir_medium">
-                  دوره زمانی (روز):
-                  <input type="number" class="period-input" id="time-period-input" value="1" min="1" max="365">
-                </label>
-                <input type="range" id="time-period" class="slider period-input" min="1" max="365" value="1" name="period">
+                        <div class="form-group row mb-3">
+                            <label for="manual-period" class="col-sm-4 col-form-label vazir_medium text-left">دوره زمانی (روز)</label>
+                            <div class="col-sm-8">
+                                <input type="number" id="manual-period" class="form-control" style="width: 100%;" value="1" min="1" max="100">
+                            </div>
+                        </div>
 
-              </div>
-              <div class="slider-container">
-                <label for="traffic" class="slider-label vazir_medium">حجم (گیگابایت):
-                  <input type="number" class="traffic-input" id="traffic-input" value="1" min="1" max="500"> </label>
-                <input type="range" id="traffic" class="slider traffic-input" min="1" max="500" value="1" name="traffic">
-              </div>
+                        <!-- Price Display -->
+                        <div class="form-group row mb-3">
+                            <label class="col-sm-4 col-form-label vazir_medium text-left">قیمت:</label>
+                            <div class="col-sm-8" style="text-align: center;">
+                                <span id="manual-price">0</span> تومان
+                            </div>
+                        </div>
 
-              <div class="price mb-4" style="text-align: center;">قیمت: <span id="price">0</span> تومان</div>
-              <input type="hidden" name="product_id" class="product_id-input" value="1">
-              <input type="hidden" name="config_id" class="config_id-input" value="0">
-              {% if user_data %}
-              <input class="btn btn-outline-danger rounded-pill vazir_medium" type="submit" value="خرید">
-              {% else %}
-              <a class="btn btn-outline-danger rounded-pill vazir_medium" href="/sign-up/">ثبت نام</a>
+                        <!-- Hidden Fields -->
+                        <input type="hidden" name="product_id" class="product_id-input" value="1">
+                        <input type="hidden" name="purchase_id" class="purchase_id-input" value="0">
 
-              {% endif %}
-
-        </form>
-
-
-        <form id="manual-entry-form" class="buy-custom-service-form card-body d-flex flex-column justify-content-around mx-auto card h-100">
-
-              <h2 class="text-900 vazir_medium mt-5" style="text-align: center;">سرویس خارج از سایت رو ارتقا بدید:</h2>
-              <div class="tab-content" id="serviceTabsContent" style="padding: 1rem;">
-                <!-- Manual Entry Tab -->
-                <div class="tab-pane fade show active" id="manual-entry" role="tabpanel" aria-labelledby="manual-entry-tab">
-                  <div class="mb-3">
-                    <label for="client_address" class="client_address form-label vazir_medium">آدرس کلاینت</label>
-                    <input type="text" id="client_address" class="client_address form-control">
-                  </div>
-
-                  <div class="row mb-3">
-                    <div class="col-12 col-md-4 mb-3 mb-md-0">
-                      <label for="client-country" class="form-label vazir_medium">کشور کلاینت</label>
-                      <select id="client-country" class="client-country form-select">
-                        <option value="">انتخاب کشور</option>
-                        <option value="finland">فنلاند</option>
-                        <option value="germany">آلمان</option>
-                        <option value="usa">آمریکا</option>
-                      </select>
+                        <!-- Submit Button or Sign-Up Link -->
+                        {% if user_data %}
+                        <div class="form-group row">
+                            <div class="col-12">
+                                <input class="btn btn-primary rounded-pill vazir_medium w-100" type="submit" value="خرید">
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="form-group row">
+                            <div class="col-12">
+                                <a class="btn btn-outline-danger rounded-pill vazir_medium w-100" href="/sign-up/">ثبت نام</a>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
-                    <div class="col-12 col-md-4 mb-3 mb-md-0">
-                      <label for="manual-traffic" class="form-label vazir_medium">حجم (گیگابایت)</label>
-                      <input type="number" id="manual-traffic" class="manual-traffic form-control" style="padding: 6px;width: 100px;" value="1" min="1" max="100">
-                    </div>
-                    <div class="col-12 col-md-4">
-                      <label for="manual-period" class="form-label vazir_medium">دوره زمانی (روز)</label>
-                      <input type="number" id="manual-period" class="manual-period form-control" style="padding: 6px;width: 100px;" value="1" min="1" max="100">
-                    </div>
-                  </div>
-
-                  <div class="price mb-3" style="margin-bottom: 20px;">قیمت: <span id="manual-price">0</span> تومان</div>
-                  <input type="hidden" name="product_id" class="product_id-input" value="1">
-                  <input type="hidden" name="config_id" class="config_id-input" value="0">
-                  {% if user_data %}
-                  <input class="btn btn-primary rounded-pill vazir_medium" style="width: 100%;" type="submit" value="خرید">
-                  {% else %}
-                  <a class="btn btn-outline-danger rounded-pill vazir_medium" href="/sign-up/">ثبت نام</a>
                 </div>
-              </div>
-
-              {% endif %}
-
-        </form>
-
-      </div>
+            </form>
+        </div>
     </div>
-  </div>
+</div>
+
 
 
   <!-- ============================================-->
@@ -446,7 +427,7 @@
           const traffic = form.querySelector('.traffic-input').value;
           const period = form.querySelector('.period-input').value;
           const product_id = form.querySelector('.product_id-input').value;
-          const config_id = form.querySelector('.config_id-input').value;
+          const purchase_id = form.querySelector('.purchase_id-input').value;
 
           fetch('/add_to_cart', {
               method: 'POST',
@@ -457,7 +438,7 @@
                   traffic: traffic,
                   period: period,
                   product_id: product_id,
-                  config_id: config_id
+                  purchase_id: purchase_id
               }),
           })
           .then(response => response.json())
@@ -475,41 +456,6 @@
               showTemporaryMessage('اتصال به سرور موفقیت آمیز نبود!', 'error');
           });
 
-      });
-  });
-
-  document.querySelectorAll('.buy-custom-service-form').forEach(form => {
-      form.addEventListener('submit', event => {
-          event.preventDefault();
-          console.log('Form submitted'); // پیام دیباگ
-
-          const traffic = form.querySelector('.traffic-input').value;
-          const period = form.querySelector('.period-input').value;
-
-          fetch('/add_custom_service_to_cart', {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                  traffic: traffic,
-                  period: period,
-              }),
-          })
-          .then(response => response.json())
-          .then(data => {
-              if (data.status === 'ok') {
-                  showTemporaryMessage('سرویس با موفقیت به سبد خرید اضافه شد!', 'success');
-              } else if (data.status === 'error') {
-                  showTemporaryMessage('مشکلی در ارسال درخواست وجود داشت!', 'error');
-              } else {
-                  showTemporaryMessage('جواب غیرمنتظره از سرور دریافت شد', 'error');
-              }
-          })
-          .catch((error) => {
-              console.error('Error:', error);
-              showTemporaryMessage('اتصال به سرور موفقیت آمیز نبود!', 'error');
-          });
       });
   });
 
@@ -521,8 +467,7 @@
 
           const traffic = form.querySelector('#manual-traffic').value;
           const period = form.querySelector('#manual-period').value;
-          const client_address = form.querySelector('#client_address').value;
-          const client_country = form.querySelector('#client-country').value;
+          const username = form.querySelector('#client_address').value;
 
 
           fetch('/upgrade-foreign-service/', {
@@ -531,8 +476,7 @@
                   'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                  config_address: client_address,
-                  country: client_country,
+                  username: username,
                   traffic: traffic,
                   period: period
               }),
@@ -547,6 +491,8 @@
                   showTemporaryMessage('سرویس مورد نظر شما در سرور یافت نشد!', 'error');
               } else if (data.status === 'alreadyExist') {
                   showTemporaryMessage('شما قبلا این سرویس رو به سبد خرید اضافه کردید!', 'error');
+              } else if (data.status === 'ServiceIsActive') {
+                  showTemporaryMessage('سرویس در داشبورد شما وجود دارد، از طریق داشبورد اقدام به تمدید سرویس کنید!', 'error');
               } else {
                   showTemporaryMessage('جواب غیرمنتظره از سرور دریافت شد', 'error');
               }
@@ -563,7 +509,6 @@
       messageDiv.textContent = message;
       messageDiv.className = `temporary-message ${type}`;
 
-      // اضافه کردن استایل برای نمایش پیام در بالای صفحه
       messageDiv.style.position = 'fixed';
       messageDiv.style.top = '80px';
       messageDiv.style.left = '50%';
@@ -585,95 +530,56 @@
 
   document.addEventListener('DOMContentLoaded', () => {
 
-    const timePeriodSlider = document.getElementById('time-period');
-    const trafficSlider = document.getElementById('traffic');
-    const timePeriodInput = document.getElementById('time-period-input');
-    const trafficInput = document.getElementById('traffic-input');
-    const priceDisplay = document.getElementById('price');
-
     const manualTrafficInput = document.getElementById('manual-traffic');
     const manualPeriodInput = document.getElementById('manual-period');
     const manualPriceDisplay = document.getElementById('manual-price');
 
-    const serviceTrafficInput = document.getElementById('service-traffic');
-    const servicePeriodInput = document.getElementById('service-period');
-    const servicePriceDisplay = document.getElementById('service-price');
-
-    // قیمت پایه برای محاسبه
     const basePricePerDay = 500;
     const basePricePerGB = 1500;
 
-    // تابع برای فرمت کردن قیمت به صورت مناسب
     function formatPrice(price) {
-        return price.toLocaleString(); // استفاده از متد toLocaleString برای جدا کردن هزارگان
+        return price.toLocaleString();
     }
 
-    // تابع برای محاسبه قیمت بر اساس حجم و دوره زمانی
     function calculatePrice(days, gb) {
         return (days * basePricePerDay) + (gb * basePricePerGB);
     }
 
-    // تابع برای به‌روزرسانی قیمت نمایش داده شده برای فرم خرید سرویس
-    function updateBuyServicePrice() {
-        const days = parseInt(timePeriodInput.value, 10);
-        const gb = parseInt(trafficInput.value, 10);
-        priceDisplay.textContent = formatPrice(calculatePrice(days, gb));
-    }
-
-    // تابع برای به‌روزرسانی قیمت نمایش داده شده برای فرم‌های دستی و آدرس سرویس
     function updateManualPrice() {
         const days = parseInt(manualPeriodInput.value, 10);
         const gb = parseInt(manualTrafficInput.value, 10);
         manualPriceDisplay.textContent = formatPrice(calculatePrice(days, gb));
     }
 
-    function updateServicePrice() {
-        const days = parseInt(servicePeriodInput.value, 10);
-        const gb = parseInt(serviceTrafficInput.value, 10);
-        servicePriceDisplay.textContent = formatPrice(calculatePrice(days, gb));
-    }
-
-    // هماهنگ کردن مقادیر دستگیره و ورودی عددی برای دوره زمانی و حجم
     function syncSlidersAndInputs(slider, input, minValue) {
         slider.addEventListener('input', () => {
             input.value = slider.value;
-            updateBuyServicePrice(); // به‌روزرسانی قیمت فرم خرید سرویس
+            updateManualPrice();
         });
 
         input.addEventListener('input', () => {
             const value = Math.max(input.value, minValue);
             input.value = value;
             slider.value = value;
-            updateBuyServicePrice(); // به‌روزرسانی قیمت فرم خرید سرویس
+            updateBuyServicePrice();
         });
-
-                      updateBuyServicePrice();
-              updateManualPrice();
+        updateManualPrice();
     }
 
-    // تنظیم هماهنگی برای فرم‌های مختلف
-    syncSlidersAndInputs(timePeriodSlider, timePeriodInput, timePeriodSlider.min);
-    syncSlidersAndInputs(trafficSlider, trafficInput, trafficSlider.min);
-
-    // تنظیم هماهنگی برای فرم‌های دستی و آدرس سرویس
     manualTrafficInput.addEventListener('input', updateManualPrice);
     manualPeriodInput.addEventListener('input', updateManualPrice);
-    serviceTrafficInput.addEventListener('input', updateServicePrice);
-    servicePeriodInput.addEventListener('input', updateServicePrice);
 
-    // محاسبه قیمت اولیه
-    updateBuyServicePrice();
     updateManualPrice();
-    updateServicePrice();
 });
 
-  document.getElementById("dropdownMenuButton").addEventListener("click", function(event) {
-    event.preventDefault();
-    var dropdownMenu = document.getElementById("dropdownMenu");
-    dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
+
+document.getElementById("dropdownMenuButton").addEventListener("click", function(event) {
+event.preventDefault();
+var dropdownMenu = document.getElementById("dropdownMenu");
+dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
 });
 
-// بستن منو اگر در جای دیگری کلیک شد
+
 window.addEventListener("click", function(event) {
     if (!event.target.matches('.user-name-button')) {
         var dropdowns = document.getElementsByClassName("dropdown-menu");

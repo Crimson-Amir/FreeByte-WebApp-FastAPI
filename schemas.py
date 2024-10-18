@@ -33,50 +33,47 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    private_token = str
 
 class User(UserBase):
     user_id: int
     class Config: orm_mode = True
 
 
-class ClientConfigBase(BaseModel):
+class PurchaseBase(BaseModel):
     traffic : int
     period : int
     product_id : int
-    config_id : int
+    purchase_id : int
     active : bool = False
 
-class ClientConfigReq(ClientConfigBase):
+class PurchaseRequirement(PurchaseBase):
     pass
 
-class ClientConfigReqCustom(BaseModel):
+class PurchaseRequirementCustom(BaseModel):
     traffic: int
     period: int
 
-class ClientConfigID(BaseModel):
-    config_id: int
+class PurchaseID(BaseModel):
+    purchase_id: int
 
 class CreateConfigInDB(BaseModel):
-    plan_name: str
-    config_key: str | None
-    config_email: str | None
-    inbound_id: int
-    traffic_gb: int
-    period_day: int
-    price: int
-    active: float = False
+    username: str
+    active: bool
+    status: str
+    traffic: int
+    period: int
+    service_uuid: str | None
+    subscription_url: str | None
     product_id: int
-    owner_id: int | None
-    update: bool | None = False
-    client_address: str | None = None
+    owner_id: int
 
-class ClientConfig(ClientConfigBase):
-    config_id: int
+class ClientConfig(PurchaseBase):
+    db_purchase_id: int
     class Config: orm_mode = True
 
 class UpgradeCustomService(BaseModel):
-    config_address: str
-    country: str
+    username: str
     traffic: int
     period: int
 
