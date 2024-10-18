@@ -5,14 +5,14 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
-from . import schemas, crud, private, models
+import schemas, crud, private, models
 import jwt, pytz, requests
 from datetime import datetime
-from.auth import SECRET_KEY, REFRESH_SECRET_KEY, create_access_token, create_refresh_token, verify_api_token
-from .utilities import (decode_access_token, connect_to_server_instance, get_db, token_black_list,
+from auth import SECRET_KEY, REFRESH_SECRET_KEY, create_access_token, create_refresh_token, verify_api_token
+from utilities import (decode_access_token, connect_to_server_instance, get_db, token_black_list,
                         calculate_total_price, report_status_to_admin, remove_service_from_server)
-from .payment_init import create_invoice, verify_iran_payment, verify_cryptomus_payment
-from .vpn_server_operation import get_server_details, upgrade_service_for_user, create_service_in_servers
+from payment_init import create_invoice, verify_iran_payment, verify_cryptomus_payment
+from vpn_server_operation import get_server_details, upgrade_service_for_user, create_service_in_servers
 
 
 verification_codes = {}

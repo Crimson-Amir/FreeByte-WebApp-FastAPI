@@ -1,9 +1,9 @@
 import logging
-from . import crud, private
+import crud, private
 import uuid, pytz, random, string, requests
 from datetime import datetime, timedelta
-from .utilities import connect_to_server_instance, traffic_to_gb, report_status_to_admin, second_to_ms
-from .panel_api import marzban_api
+from utilities import connect_to_server_instance, traffic_to_gb, report_status_to_admin, second_to_ms
+from panel_api import marzban_api
 import copy
 
 

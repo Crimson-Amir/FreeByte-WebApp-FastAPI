@@ -1,10 +1,10 @@
 import logging
-from . import panel_api
-from .database import SessionLocal
+import panel_api
+from database import SessionLocal
 import jwt, aiohttp, pytz, random, string, requests
 from datetime import datetime, timedelta
-from.auth import SECRET_KEY
-from .private import ADMIN_CHAT_IDs, telegram_bot_token, telegram_thread_id
+from auth import SECRET_KEY
+from private import ADMIN_CHAT_IDs, telegram_bot_token, telegram_thread_id
 
 def get_db():
     db = SessionLocal()

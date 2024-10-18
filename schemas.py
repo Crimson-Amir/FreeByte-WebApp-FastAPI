@@ -33,7 +33,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
-    private_token = str
+    private_token: str
 
 class User(UserBase):
     user_id: int

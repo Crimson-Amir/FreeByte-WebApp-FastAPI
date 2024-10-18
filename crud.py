@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import update, insert, delete
 from hashlib import md5
-from . import models, schemas
+import models, schemas
 
 def hash_password_md5(password: str) -> str:
     password_bytes = password.encode()
