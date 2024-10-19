@@ -125,7 +125,8 @@ async def create_user(user: schemas.UserCreate, response: Response, db: Session 
 
 
 @app.api_route('/loggin', methods=['GET', 'POST'], response_model=schemas.User)
-async def loggin(request: Request, response: Response, user: schemas.UserCreate = None, db: Session = Depends(get_db)):
+async def loggin(request: Request, response: Response, user: schemas.UserLoggin = None, db: Session = Depends(get_db)):
+
     if request.method == 'GET':
         return templates.TemplateResponse(request=request, name='authentication/loggin.html')
 

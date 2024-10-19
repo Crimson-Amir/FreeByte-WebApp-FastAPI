@@ -91,7 +91,7 @@ async def create_service_in_servers(session, purchase, user_id):
 
     msg = (f'User Buy Service'
            f'\nService ID: {purchase.purchase_id}'
-           f'\nService username: {purchase.username}'
+           f'\nService username: {create_new_puchase.username}'
            f'\nTraffic: {purchase.traffic}GB'
            f'\nPeriod: {purchase.period}day'
            f'\nproduct Name: {purchase.product.product_name}'
