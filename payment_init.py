@@ -54,7 +54,7 @@ async def create_invoice(database, user_id, action, amount, cart_id, gateway):
 
 async def verify_iran_payment(authority: str, amount: int):
     url = 'https://payment.zarinpal.com/pg/v4/payment/verify.json'
-    return {'data': {'code': 100}}
+    # return {'data': {'code': 100}}
     json_payload = {
         'merchant_id': private.zarinpal_merchent_id,
         'amount': amount,
