@@ -159,7 +159,7 @@ def does_same_config_available_in_cart(db: Session, period: int, traffic: int):
             .filter(models.Purchase.active == False)
             .first())
 
-def check_any_purchase_match(db: Session, username):
+def check_any_purchase_match(db: Session, username: str):
     query = db.query(models.Purchase).filter(models.Purchase.username == username).first()
     return query
 

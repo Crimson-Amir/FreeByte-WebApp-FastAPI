@@ -90,7 +90,7 @@ async def report_status_to_admin(text, status='success', owner=None):
         telegram_bot_url = f"https://freebyte.click/send_telegram_notification/"
         requests.post(telegram_bot_url, data={'chat_id': ADMIN_CHAT_IDs[0], 'text': text, 'message_thread_id': telegram_thread_id, 'bot_token': telegram_bot_token}, timeout=5)
     except Exception as e:
-        print(f'Failed to send message to ADMIN {e}')
+        logging.error(f'Failed to send message to ADMIN {e}')
 
 async def remove_service_from_server(purchase):
     connect_to_server_instance.refresh_token()

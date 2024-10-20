@@ -334,18 +334,19 @@ async def handle_successful_payment(session, financial):
 
     crud.update_financial_report_status(session, financial.financial_id, 'paid')
     session.query(models.CartPurchaseAssociation).filter(models.CartPurchaseAssociation.cart_id == financial.id_holder).delete()
-    await handle_successful_report(financial, financial.authority)
+    await handle_successful_report(financial)
 
-async def handle_successful_report(financial, authority):
+async def handle_successful_report(financial):
     """Reports successful payment."""
 
     msg = (
         f'Action: {financial.action.replace("_", " ")}\n'
-        f'Authority: {authority}\n'
+        f'Authority: {financial.authority}\n'
         f'Amount: {financial.amount:,}\n'
         f'Gateway: {financial.payment_getway}\n'
         f'Cart ID: {financial.id_holder}\n'
     )
+
     await report_status_to_admin(msg, 'success', financial.owner)
 
 

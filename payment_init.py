@@ -2,7 +2,7 @@ import logging
 import crud, private
 import jwt, uuid, json, pytz, requests
 from API.zarinPalAPI import SendInformation
-from API.cryptomusAPI import CreateInvoice
+from API.cryptomusAPI import CreateInvoice, InvoiceInfo
 from API.convert_irt_to_usd import convert_irt_to_usd_by_teter
 from utilities import SendRequest
 
@@ -66,7 +66,7 @@ async def verify_iran_payment(authority: str, amount: int):
     return response
 
 async def verify_cryptomus_payment(order_id: str, uuid_: str | None):
-    check_invoic = await cryptomusApi.InvoiceInfo(private.cryptomus_api_key, private.cryptomus_merchant_id).execute(order_id, uuid_)
+    check_invoic = await InvoiceInfo(private.cryptomus_api_key, private.cryptomus_merchant_id).execute(order_id, uuid_)
 
     if check_invoic:
         payment_status = check_invoic.get('result', {}).get('payment_status')
