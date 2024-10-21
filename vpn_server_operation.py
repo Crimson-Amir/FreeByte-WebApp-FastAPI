@@ -4,7 +4,6 @@ import uuid, pytz, random, string, requests
 from datetime import datetime, timedelta
 from utilities import connect_to_server_instance, traffic_to_gb, report_status_to_admin, second_to_ms
 from panel_api import marzban_api
-import copy
 
 
 async def get_server_details(all_services):
@@ -32,18 +31,40 @@ async def get_server_details(all_services):
     return {}
 
 
+
 async def create_json_config(username, expiration_in_day, traffic_in_byte, service_uuid, status="active"):
     return {
         "username": username,
         "proxies": {
             "vless": {
                 "id": service_uuid
-            }
+            },
+            "vmess": {
+                "id": service_uuid
+            },
+            "trojan": {
+                "password": service_uuid
+            },
+            "shadowsocks": {
+                "password": service_uuid
+            },
         },
         "inbounds": {
             "vless": [
-                "VLESS TCP"
-            ]
+                "VLESS TCP",
+                "VLESS TCP REALITY",
+                "VLESS GRPC REALITY"
+            ],
+            "vmess": [
+                "VMess TCP",
+                "VMess Websocket",
+            ],
+            "trojan": [
+                "Trojan Websocket TLS",
+            ],
+            "shadowsocks": [
+                "Shadowsocks TCP",
+            ],
         },
         "expire": expiration_in_day,
         "data_limit": traffic_in_byte,
@@ -118,7 +139,10 @@ async def upgrade_service_for_user(db, purchase, amount):
 
         date_in_timestamp = (expire_date + timedelta(days=purchase.period)).timestamp()
 
-        json_config = await create_json_config(purchase.username, date_in_timestamp, traffic_to_byte, service_uuid=purchase.service_uuid)
+        json_config = await create_json_config(
+            purchase.username, date_in_timestamp, traffic_to_byte,
+            service_uuid=purchase.service_uuid if purchase.service_uuid else uuid.uuid4().hex
+        )
         await marzban_api.modify_user(main_server_ip, purchase.username, json_config)
 
         calcuate_price = (private.price_per_gb * purchase.traffic) + (private.price_per_day * purchase.period)
