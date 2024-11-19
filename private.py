@@ -1,4 +1,4 @@
-app_url = 'https://freebyte.click'
+app_url = 'https://shop.freebyteshop.click'
 price_per_gb, price_per_day = 1500, 500
 private_token = 'ba71aae1-c7ff-4666-90d5-4d50e446c11e'
 

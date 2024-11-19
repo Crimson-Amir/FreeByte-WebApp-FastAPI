@@ -274,6 +274,7 @@ async def pay_by_wallet(authority: str, request: Request, db: Session = Depends(
         db.rollback()
         return RedirectResponse('/dashboard/?payment_status=2')
 
+
 @app.get('/iran_recive_payment_result/')
 async def recive_payment_result(Authority: str, Status: str, request: Request, db: Session = Depends(get_db)):
     db.begin()

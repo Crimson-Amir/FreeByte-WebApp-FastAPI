@@ -64,7 +64,6 @@ class FinancialReport(Base):
     owner_id = Column(BigInteger, ForeignKey('user_detail.user_id'))
     owner = relationship("User", back_populates="financial_reports")
 
-
 class MainServer(Base):
     __tablename__ = 'main_server'
     server_id = Column(Integer, primary_key=True)
