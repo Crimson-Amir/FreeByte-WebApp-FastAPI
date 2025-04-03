@@ -13,7 +13,7 @@ class User(Base):
     name = Column(String)
     hashed_password = Column(String)
     active = Column(Boolean, default=True)
-    register_date = Column(DateTime, default=datetime.now())
+    register_date = Column(DateTime, default=datetime.utcnow)
 
     credit = Column(Integer, default=0)
 
@@ -59,7 +59,7 @@ class FinancialReport(Base):
     additional_data = Column(String)
     payment_status = Column(String)
 
-    register_date = Column(DateTime, default=datetime.now())
+    register_date = Column(DateTime, default=datetime.utcnow)
 
     owner_id = Column(BigInteger, ForeignKey('user_detail.user_id'))
     owner = relationship("User", back_populates="financial_reports")
@@ -81,7 +81,7 @@ class Product(Base):
     product_id = Column(Integer, primary_key=True)
     active = Column(Boolean)
     product_name = Column(String)
-    register_date = Column(DateTime, default=datetime.now())
+    register_date = Column(DateTime, default=datetime.utcnow)
     purchase = relationship("Purchase", back_populates="product")
 
     main_server_id = Column(Integer, ForeignKey('main_server.server_id'))
@@ -109,6 +109,6 @@ class Purchase(Base):
     owner_id = Column(BigInteger, ForeignKey('user_detail.user_id'))
     owner = relationship("User", back_populates="purchases")
 
-    register_date = Column(DateTime, default=datetime.now())
+    register_date = Column(DateTime, default=datetime.utcnow)
 
     cart_associations = relationship("CartPurchaseAssociation", back_populates="purchase")
