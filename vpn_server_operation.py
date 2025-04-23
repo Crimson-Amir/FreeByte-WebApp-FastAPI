@@ -127,15 +127,9 @@ async def upgrade_service_for_user(db, purchase, amount):
     main_server_ip = purchase.product.main_server.server_ip
 
     try:
-        user = await marzban_api.get_user(main_server_ip, purchase.username)
-
-        if user['status'] == 'active':
-            traffic_to_byte = int((purchase.traffic * (1024 ** 3)) + user['data_limit'])
-            expire_date = datetime.fromtimestamp(user['expire'])
-        else:
-            await marzban_api.reset_user_data_usage(main_server_ip, purchase.username)
-            traffic_to_byte = int(purchase.traffic * (1024 ** 3))
-            expire_date = datetime.now(pytz.timezone('Asia/Tehran'))
+        await marzban_api.reset_user_data_usage(main_server_ip, purchase.username)
+        traffic_to_byte = int(purchase.traffic * (1024 ** 3))
+        expire_date = datetime.now(pytz.timezone('Asia/Tehran'))
 
         date_in_timestamp = (expire_date + timedelta(days=purchase.period)).timestamp()
 
