@@ -353,14 +353,14 @@ async def handle_successful_report(financial):
 
 async def handle_failed_payment(session, financial, exception):
     """Handles payment failure and refunds if necessary."""
-    crud.add_credit_to_user(session, financial.user_id, financial.amount)
+    crud.add_credit_to_user(session, financial.owner_id, financial.amount)
     crud.update_financial_report_status(session, financial.financial_id, 'refund')
     tb = traceback.format_exc()
 
     error_msg = (
         'Amount refunded to user wallet! Payment was not successful!'
         f'\n\nAuthority: {financial.authority}'
-        f'\nUser ID: {financial.user_id}'
+        f'\nUser ID: {financial.owner_id}'
         f'\nAmount: {financial.amount:,}'
         f'\n\nError: {str(exception)}'
         f'\n\nTraceBack:\n{tb}'
