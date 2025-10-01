@@ -1,5 +1,5 @@
-app_url = 'https://shop.freebyteshop.click'
-price_per_gb, price_per_day = 1500, 500
+app_url = 'https://shop.freebyte.shop'
+price_per_gb, price_per_day = 1550, 500
 private_token = 'ba71aae1-c7ff-4666-90d5-4d50e446c11e'
 
 # ZarinPal
