@@ -485,4 +485,6 @@ async def upgrade_foreign_service(config: schemas.UpgradeCustomService, request:
         return {'status': 'alreadyExist'}
 
     except Exception as e:
+        if "404 Client Error" in str(e):
+          return {'status': 'itExist'}
         return {'status': 'error', 'reason': str(e)}
